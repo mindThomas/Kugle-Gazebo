@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<robot name="kugle" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+	<!-- include the Gazebo description of the Kugle robot -->
+	<!-- see the guide: http://wiki.ros.org/urdf/Tutorials/Using%20a%20URDF%20in%20Gazebo -->
+	<!-- inspired from https://github.com/mindThomas/JetsonCar-Simulation/blob/master/jetsoncar_description/urdf/gazebo.xacro -->
+
+
+	<!-- Visual and physical properties -->
+	<!-- See http://gazebosim.org/tutorials?tut=ros_urdf&cat=connect_ros -->
+	<gazebo reference="base_link">
+		<mu1>0.0</mu1>
+		<mu2>0.0</mu2>
+		<kp>1000000.0</kp>
+		<kd>100.0</kd>
+		<minDepth>0.001</minDepth>
+		<maxVel>100.0</maxVel>
+		<maxForce>100.0</maxForce>
+	</gazebo>
+
+	<gazebo reference="ball">
+		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
+		<!--<kd  value="1.0" />--> <!-- contact damping -->
+		<material>Gazebo/Black</material>
+		<!--<turnGravityOff>false</turnGravityOff>-->
+	</gazebo>
+
+
+	<gazebo reference="orientation1">
+		<mu1 value="10000.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="10000.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<kp  value="10000000.0" /> <!-- contact stiffness -->
+		<kd  value="1.0" /> <!-- contact damping -->
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+	<gazebo reference="orientation1">
+		<mu1 value="10000.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="10000.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<kp  value="10000000.0" /> <!-- contact stiffness -->
+		<kd  value="1.0" /> <!-- contact damping -->
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+	<gazebo reference="robot">
+		<mu1 value="10000.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="10000.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<kp  value="10000000.0" /> <!-- contact stiffness -->
+		<kd  value="1.0" /> <!-- contact damping -->
+		<material>Gazebo/Grey</material>
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+	<!-- We need to link Gazebo and ROS and let Gazebo load all the previously defined ROS parameters. Therefore this Gazebo file should be included in the end of the main xacro file! --> 
+
+	<!-- Link Gazebo and ROS through plugins -->
+	<!-- See http://gazebosim.org/tutorials?tut=ros_gzplugins -->
+	<gazebo>
+		<!-- https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/indigo-devel/hector_gazebo_plugins/src/gazebo_ros_force_based_move.cpp -->
+		<plugin name="ballbot_acceleration_controller" filename="libgazebo_ballbot_acceleration_control.so">
+			<robotNamespace>/kugle</robotNamespace>
+			<commandTopic>cmd_force</commandTopic>
+			<odometryTopic>odom_raw</odometryTopic>
+			<odometryFrame>odom</odometryFrame>
+			<odometryRate>20.0</odometryRate>
+			<robotBaseLink>base_link</robotBaseLink>
+			<robotBaseJoint>base_to_robot</robotBaseJoint>
+			<publishOdometryTf>1</publishOdometryTf>
+			<cmdTimeout>3.0</cmdTimeout>
+		</plugin>
+	</gazebo>
+
+
+	<!-- Plugins, eg. sensors -->
+	<!-- hokuyo LiDAR can be found here: https://github.com/mit-racecar/racecar-simulator/blob/master/racecar_description/urdf/racecar.gazebo#L59 -->
+
+	<!-- camera sensor might be found here: https://github.com/JoshMarino/gazebo_and_ros_control or here: http://gazebosim.org/tutorials?tut=ros_gzplugins -->
+
+</robot>
