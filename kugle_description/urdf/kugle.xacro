@@ -60,21 +60,38 @@
 
 	<link name="orientation1">
 		<inertial>
-			<xacro:small_inertial/>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<mass value="0.001" />
+			<inertia ixx="0.0"
+					 ixy="0"
+					 ixz="0"
+					 iyy="0.0"
+					 iyz="0"
+					 izz="0.0"
+			/>
 		</inertial>
 	</link>
 
 	<joint name="yaw" type="revolute">
-		<parent link="base_link"/>
+		<parent link="ball"/>
 		<child link="orientation1"/>
-		<origin xyz="0 0 ${ball_radius}" rpy="0 0 0" /> <!-- offset from parent to child, so with direction based in parent frame -->
+		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- offset from parent to child, so with direction based in parent frame -->
 		<axis xyz="0 0 1"/>
 		<limit lower="-${pi}" upper="${pi}" effort="10" velocity="100"/>
 	</joint>
 
+
 	<link name="orientation2">
 		<inertial>
-			<xacro:small_inertial/>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<mass value="0.001" />
+			<inertia ixx="0.0"
+					 ixy="0"
+					 ixz="0"
+					 iyy="0.0"
+					 iyz="0"
+					 izz="0.0"
+			/>
 		</inertial>
 	</link>
 
@@ -94,17 +111,17 @@
 			<!-- Add a fictious mass and inertia to emulate a unit point mass - this allows the Torque inputs to work as Acceleration inputs -->
 			<origin xyz="0 0 ${cylinder_height/2}" rpy="0 0 0" />
 			<mass value="0.001" />
-			<inertia ixx="0.0"
+			<inertia ixx="0000000.0"
 					 ixy="0"
 					 ixz="0"
-					 iyy="0.0"
+					 iyy="0000000.0"
 					 iyz="0"
-					 izz="0.0"
+					 izz="0000000.0"
 			/>
 		</inertial>
-		<collision>
+		<!--<collision>
 			<xacro:robot_geometry/>
-		</collision>
+		</collision>-->
 		<visual>
 			<material name="grey"/>
 			<xacro:robot_geometry/>
@@ -119,4 +136,5 @@
 		<axis xyz="1 0 0"/>
 		<limit lower="-${pi/2}" upper="${pi/2}" effort="10" velocity="100"/>
 	</joint>
+
 </robot>

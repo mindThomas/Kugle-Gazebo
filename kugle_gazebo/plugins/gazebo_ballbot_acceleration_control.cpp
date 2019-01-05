@@ -57,7 +57,7 @@ namespace gazebo
     robot_namespace_ = "";
     if (!sdf->HasElement("robotNamespace")) 
     {
-      ROS_INFO("PlanarMovePlugin missing <robotNamespace>, "
+      ROS_INFO("BallbotAccelerationControl missing <robotNamespace>, "
           "defaults to \"%s\"", robot_namespace_.c_str());
     }
     else 
@@ -66,10 +66,10 @@ namespace gazebo
         sdf->GetElement("robotNamespace")->Get<std::string>();
     }
 
-    command_topic_ = "cmd_vel";
+    command_topic_ = "cmd_attitude";
     if (!sdf->HasElement("commandTopic")) 
     {
-      ROS_WARN("PlanarMovePlugin (ns = %s) missing <commandTopic>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <commandTopic>, "
           "defaults to \"%s\"", 
           robot_namespace_.c_str(), command_topic_.c_str());
     } 
@@ -81,7 +81,7 @@ namespace gazebo
     odometry_topic_ = "odom";
     if (!sdf->HasElement("odometryTopic")) 
     {
-      ROS_WARN("PlanarMovePlugin (ns = %s) missing <odometryTopic>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <odometryTopic>, "
           "defaults to \"%s\"", 
           robot_namespace_.c_str(), odometry_topic_.c_str());
     } 
@@ -93,7 +93,7 @@ namespace gazebo
     odometry_frame_ = "odom";
     if (!sdf->HasElement("odometryFrame")) 
     {
-      ROS_WARN("PlanarMovePlugin (ns = %s) missing <odometryFrame>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <odometryFrame>, "
           "defaults to \"%s\"",
           robot_namespace_.c_str(), odometry_frame_.c_str());
     }
@@ -105,7 +105,7 @@ namespace gazebo
       world_frame_ = "world";
       if (!sdf->HasElement("worldFrame"))
       {
-          ROS_WARN("PlanarMovePlugin (ns = %s) missing <worldFrame>, "
+          ROS_WARN("BallbotAccelerationControl (ns = %s) missing <worldFrame>, "
                    "defaults to \"%s\"",
                    robot_namespace_.c_str(), world_frame_.c_str());
       }
@@ -114,28 +114,10 @@ namespace gazebo
           world_frame_ = sdf->GetElement("worldFrame")->Get<std::string>();
       }
 
-
-    torque_yaw_velocity_p_gain_ = 100.0;
-    force_x_velocity_p_gain_ = 10000.0;
-    force_y_velocity_p_gain_ = 10000.0;
-    
-    if (sdf->HasElement("yaw_velocity_p_gain"))
-      (sdf->GetElement("yaw_velocity_p_gain")->GetValue()->Get(torque_yaw_velocity_p_gain_));
-
-    if (sdf->HasElement("x_velocity_p_gain"))
-      (sdf->GetElement("x_velocity_p_gain")->GetValue()->Get(force_x_velocity_p_gain_));
-
-    if (sdf->HasElement("y_velocity_p_gain"))
-      (sdf->GetElement("y_velocity_p_gain")->GetValue()->Get(force_y_velocity_p_gain_));
-      
-    ROS_INFO_STREAM("ForceBasedMove using gains: yaw: " << torque_yaw_velocity_p_gain_ <<
-                                                 " x: " << force_x_velocity_p_gain_ <<
-                                                 " y: " << force_y_velocity_p_gain_ << "\n");
-
     robot_base_link_ = "base_link";
     if (!sdf->HasElement("robotBaseLink"))
     {
-      ROS_WARN("PlanarMovePlugin (ns = %s) missing <robotBaseLink>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <robotBaseLink>, "
           "defaults to \"%s\"",
           robot_namespace_.c_str(), robot_base_link_.c_str());
     } 
@@ -154,54 +136,10 @@ namespace gazebo
       return;
     }
 
-      /*robot_link_ = "robot";
-      if (!sdf->HasElement("robotLink"))
-      {
-          ROS_WARN("PlanarMovePlugin (ns = %s) missing <robotLink>, "
-                   "defaults to \"%s\"",
-                   robot_namespace_.c_str(), robot_link_.c_str());
-      }
-      else
-      {
-          robot_link_ = sdf->GetElement("robotLink")->Get<std::string>();
-      }
-
-      ROS_INFO_STREAM("robotBaseLink for force based move plugin: " << robot_link_  << "\n");
-
-      this->robotLink_ = link_->GetChildLink(robot_link_);
-
-      if (!this->robotLink_)
-      {
-          ROS_FATAL_STREAM("Could not find link for robot frame: " << robot_link_ << "\n");
-          return;
-      }*/
-
-      robot_base_joint_ = "base_link_to_robot";
-      if (!sdf->HasElement("robotBaseJoint"))
-      {
-          ROS_WARN("PlanarMovePlugin (ns = %s) missing <robotBaseJoint>, "
-                   "defaults to \"%s\"",
-                   robot_namespace_.c_str(), robot_base_joint_.c_str());
-      }
-      else
-      {
-          robot_base_joint_ = sdf->GetElement("robotBaseJoint")->Get<std::string>();
-      }
-
-      ROS_INFO_STREAM("robotBaseJoint for force based move plugin: " << robot_base_joint_  << "\n");
-
-      this->joint_ = parent->GetJoint(robot_base_joint_);
-
-      if (!this->joint_)
-      {
-          ROS_WARN_STREAM("Could not find joint for base frame to robot: " << robot_base_joint_ << "\n");
-      }
-
-
     odometry_rate_ = 20.0;
     if (!sdf->HasElement("odometryRate")) 
     {
-      ROS_WARN("PlanarMovePlugin (ns = %s) missing <odometryRate>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <odometryRate>, "
           "defaults to %f",
           robot_namespace_.c_str(), odometry_rate_);
     } 
@@ -213,7 +151,7 @@ namespace gazebo
   cmd_timeout_ = 1.0;
   if (!sdf->HasElement("cmdTimeout"))
   {
-      ROS_WARN("PlanarMovePlugin (ns = %s) missing <cmdTimeout>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <cmdTimeout>, "
                "defaults to %f",
                robot_namespace_.c_str(), cmd_timeout_);
   }
@@ -222,9 +160,22 @@ namespace gazebo
       cmd_timeout_ = sdf->GetElement("cmdTimeout")->Get<double>();
   }
 
+
+  acceleration_coefficient_ = 13.71;
+  if (!sdf->HasElement("accelerationCoefficient"))
+  {
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <accelerationCoefficient>, "
+               "defaults to %f",
+               robot_namespace_.c_str(), acceleration_coefficient_);
+  }
+  else
+  {
+      acceleration_coefficient_ = sdf->GetElement("accelerationCoefficient")->Get<double>();
+  }
+
       this->publish_odometry_tf_ = true;
     if (!sdf->HasElement("publishOdometryTf")) {
-      ROS_WARN("PlanarMovePlugin Plugin (ns = %s) missing <publishOdometryTf>, defaults to %s",
+      ROS_WARN("BallbotAccelerationControl Plugin (ns = %s) missing <publishOdometryTf>, defaults to %s",
                this->robot_namespace_.c_str(), this->publish_odometry_tf_ ? "true" : "false");
     } else {
       this->publish_odometry_tf_ = sdf->GetElement("publishOdometryTf")->Get<bool>();
@@ -237,9 +188,10 @@ namespace gazebo
     last_odom_publish_time_ = parent_->GetWorld()->GetSimTime();
     last_odom_pose_ = parent_->GetWorldPose();
 #endif
-    x_ = 0;
-    y_ = 0;
-    rot_ = 0;
+
+    prev_x_vel_ = 0;
+    prev_y_vel_ = 0;
+    prev_rot_vel_ = 0;
     alive_ = true;
 
     attitudeReference_ = tf::Quaternion(0,0,0,1); // set as unit quaternion
@@ -259,7 +211,7 @@ namespace gazebo
     // Ensure that ROS has been initialized and subscribe to cmd_vel
     if (!ros::isInitialized()) 
     {
-      ROS_FATAL_STREAM("PlanarMovePlugin (ns = " << robot_namespace_
+      ROS_FATAL_STREAM("BallbotAccelerationControl (ns = " << robot_namespace_
         << "). A ROS node for Gazebo has not been initialized, "
         << "unable to load plugin. Load the Gazebo system plugin "
         << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
@@ -277,8 +229,8 @@ namespace gazebo
 
     // subscribe to the odometry topic
     ros::SubscribeOptions so =
-      ros::SubscribeOptions::create<geometry_msgs::Twist>(command_topic_, 1,
-          boost::bind(&GazeboRosBallbotAccelerationControl::cmdVelCallback, this, _1),
+      ros::SubscribeOptions::create<geometry_msgs::Quaternion>(command_topic_, 1,
+          boost::bind(&GazeboRosBallbotAccelerationControl::QuaternionRefCallback, this, _1),
           ros::VoidPtr(), &queue_);
 
     vel_sub_ = rosnode_->subscribe(so);
@@ -311,12 +263,7 @@ namespace gazebo
       ros::Time current_ros_time = ros::Time::now();
       ros::Duration diff = current_ros_time - last_cmd_update_time_;
       if (diff.toSec() > cmd_timeout_) {
-          x_ = 0.0;
-          y_ = 0.0;
-          rot_ = 0.0;
-
           attitudeReference_ = tf::Quaternion(0,0,0,1); // set as unit quaternion
-          attitudeReference_.setRPY(0.2,0,0);
           //robotLink_->SetRelativePose(math::Pose(math::Vector3(0, 0, 0), math::Quaternion(0.2, 0, 0)));
 
           /*ROS_INFO_STREAM("Links:");
@@ -383,11 +330,40 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
 
 
     //link_->SetTorque(math::Vector3(0.0, 0.0, rot_));
-    link_->SetForce(math::Vector3(x_, y_, 0.0));
+    //link_->SetForce(math::Vector3(x_, y_, 0.0));
+    /*if (parent_->GetLink("base_link"))
+          parent_->GetLink("base_link")->SetForce(math::Vector3(x_, y_, 0.0));
+    if (parent_->GetLink("robot"))
+        parent_->GetLink("robot")->SetForce(math::Vector3(x_, y_, 0.0));*/
 
-      /*double dt = (current_time - prev_update_time_).Double();
+      /* Determine acceleration from current attitude reference
+       * This comes from the linear tilt-only MPC model
+       * - an approximate linear relationship matching the steady state dynamics
+       */
+      double accel_x_ref = acceleration_coefficient_ * attitudeReference_.y();
+      double accel_y_ref = -acceleration_coefficient_ * attitudeReference_.x();
+
+
+      double dt = (current_time - prev_update_time_).Double();
       prev_update_time_ = current_time;
 
+      prev_x_vel_ += accel_x_ref * dt;
+      prev_y_vel_ += accel_y_ref * dt;
+
+      //math::Vector3 linear_vel2 = parent_->GetLink("base_link")->GetRelativeLinearVel();
+      //parent_->GetLink("base_link")->SetLinearVel(math::Vector3(prev_x_vel_, prev_y_vel_, linear_vel2.z));
+
+      math::Vector3 linear_vel_world = link_->GetWorldLinearVel();
+      math::Vector3 angular_vel_world = link_->GetWorldAngularVel();
+
+      // Set our desired model velocities (based on the acceleration references)
+      linear_vel_world.x = prev_x_vel_;
+      linear_vel_world.y = prev_y_vel_;
+      angular_vel_world.z = 0; //prev_rot_vel_;   // do not rotate around z-axis
+
+      link_->SetWorldTwist(linear_vel_world, angular_vel_world, true);
+
+      /*
       math::Vector3 linear_accel = (linear_vel - prev_linear_vel_) / dt;
       prev_linear_vel_ = linear_vel;
 
@@ -428,15 +404,16 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     callback_queue_thread_.join();
   }
 
-  void GazeboRosBallbotAccelerationControl::cmdVelCallback(
-      const geometry_msgs::Twist::ConstPtr& cmd_msg) 
+  void GazeboRosBallbotAccelerationControl::QuaternionRefCallback(
+      const geometry_msgs::Quaternion::ConstPtr& quatMsg)
   {
-    boost::mutex::scoped_lock scoped_lock(lock);
-    x_ = cmd_msg->linear.x;
-    y_ = cmd_msg->linear.y;
-    rot_ = cmd_msg->angular.z;
+      boost::mutex::scoped_lock scoped_lock(lock);
+      attitudeReference_.setX(quatMsg->x);
+      attitudeReference_.setY(quatMsg->y);
+      attitudeReference_.setZ(quatMsg->z);
+      attitudeReference_.setW(quatMsg->w);
 
-    last_cmd_update_time_ = ros::Time::now();
+      last_cmd_update_time_ = ros::Time::now();
   }
 
   void GazeboRosBallbotAccelerationControl::QueueThread()

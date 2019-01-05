@@ -83,9 +83,6 @@ namespace gazebo {
       physics::LinkPtr link_;
       physics::LinkPtr robotLink_;
 
-      /// \brief A pointer to the joint whose angle is to be controlled
-      physics::JointPtr joint_;
-
       /// \brief The Link this plugin is attached to, and will exert forces on.
       private: std::string link_name_;
 
@@ -107,11 +104,11 @@ namespace gazebo {
       std::string odometry_frame_;
       std::string robot_base_link_;
       std::string robot_link_;
-      std::string robot_base_joint_;
       std::string world_frame_;
       double odometry_rate_;
       bool publish_odometry_tf_;
       double cmd_timeout_;
+      double acceleration_coefficient_;
 
       tf::Quaternion attitudeReference_;
 
@@ -121,11 +118,12 @@ namespace gazebo {
       void QueueThread();
 
       // command velocity callback
-      void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
+      void QuaternionRefCallback(const geometry_msgs::Quaternion::ConstPtr& cmd_msg);
 
-      double x_;
-      double y_;
-      double rot_;
+      double prev_x_vel_;
+      double prev_y_vel_;
+      double prev_rot_vel_;
+
       bool alive_;
       common::Time last_odom_publish_time_;
 #if (GAZEBO_MAJOR_VERSION >= 8)
@@ -133,10 +131,6 @@ namespace gazebo {
 #else
       math::Pose last_odom_pose_;
 #endif
-      
-      double torque_yaw_velocity_p_gain_;
-      double force_x_velocity_p_gain_;
-      double force_y_velocity_p_gain_;
 
       common::Time prev_update_time_;
       math::Vector3 prev_linear_vel_;

@@ -11,8 +11,8 @@
 	<gazebo reference="base_link">
 		<mu1>0.0</mu1>
 		<mu2>0.0</mu2>
-		<kp>1000000.0</kp>
-		<kd>100.0</kd>
+		<!--<kp>1000000.0</kp>
+		<kd>100.0</kd>-->
 		<minDepth>0.001</minDepth>
 		<maxVel>100.0</maxVel>
 		<maxForce>100.0</maxForce>
@@ -29,28 +29,28 @@
 
 
 	<gazebo reference="orientation1">
-		<mu1 value="10000.0"/> <!-- Columb friction coefficient in fdir1 direction -->
-		<mu2 value="10000.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
-		<kp  value="10000000.0" /> <!-- contact stiffness -->
-		<kd  value="1.0" /> <!-- contact damping -->
-		<turnGravityOff>true</turnGravityOff>
+		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
+		<!--<kd  value="1.0" />--> <!-- contact damping -->
+		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
-	<gazebo reference="orientation1">
-		<mu1 value="10000.0"/> <!-- Columb friction coefficient in fdir1 direction -->
-		<mu2 value="10000.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
-		<kp  value="10000000.0" /> <!-- contact stiffness -->
-		<kd  value="1.0" /> <!-- contact damping -->
-		<turnGravityOff>true</turnGravityOff>
+	<gazebo reference="orientation2">
+		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
+		<!--<kd  value="1.0" />--> <!-- contact damping -->
+		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
 	<gazebo reference="robot">
-		<mu1 value="10000.0"/> <!-- Columb friction coefficient in fdir1 direction -->
-		<mu2 value="10000.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
-		<kp  value="10000000.0" /> <!-- contact stiffness -->
-		<kd  value="1.0" /> <!-- contact damping -->
+		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
+		<!--<kd  value="1.0" />--> <!-- contact damping -->
 		<material>Gazebo/Grey</material>
-		<turnGravityOff>true</turnGravityOff>
+		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
 	<!-- We need to link Gazebo and ROS and let Gazebo load all the previously defined ROS parameters. Therefore this Gazebo file should be included in the end of the main xacro file! --> 
@@ -61,14 +61,15 @@
 		<!-- https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/indigo-devel/hector_gazebo_plugins/src/gazebo_ros_force_based_move.cpp -->
 		<plugin name="ballbot_acceleration_controller" filename="libgazebo_ballbot_acceleration_control.so">
 			<robotNamespace>/kugle</robotNamespace>
-			<commandTopic>cmd_force</commandTopic>
+			<commandTopic>cmd_attitude</commandTopic>
 			<odometryTopic>odom_raw</odometryTopic>
 			<odometryFrame>odom</odometryFrame>
 			<odometryRate>20.0</odometryRate>
 			<robotBaseLink>base_link</robotBaseLink>
 			<robotBaseJoint>base_to_robot</robotBaseJoint>
 			<publishOdometryTf>1</publishOdometryTf>
-			<cmdTimeout>3.0</cmdTimeout>
+			<cmdTimeout>1.0</cmdTimeout>
+			<accelerationCoefficient>13.71</accelerationCoefficient> <!-- Approximate linear relationship between Quaternion reference component and steady state acceleration -->
 		</plugin>
 	</gazebo>
 
