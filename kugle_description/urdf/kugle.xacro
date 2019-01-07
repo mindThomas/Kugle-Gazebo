@@ -21,7 +21,7 @@
 	<xacro:include filename="$(find kugle_description)/urdf/gazebo.xacro" />
 	<xacro:include filename="$(find kugle_description)/urdf/materials.xacro" />
 
-	<!-- Base link is center of ball -->
+	<!-- Base link is at the contact point (hence ground level) -->
 	<link name="base_link"/>
 
 
@@ -58,7 +58,7 @@
 
 	<xacro:fixed_offset_joint parent="base_link" child="ball" offset="0 0 ${ball_radius}"/>
 
-	<link name="orientation1">
+	<link name="heading">
 		<inertial>
 			<origin xyz="0 0 0" rpy="0 0 0" />
 			<mass value="0.001" />
@@ -74,14 +74,14 @@
 
 	<joint name="yaw" type="revolute">
 		<parent link="ball"/>
-		<child link="orientation1"/>
+		<child link="heading"/>
 		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- offset from parent to child, so with direction based in parent frame -->
 		<axis xyz="0 0 1"/>
 		<limit lower="-${pi}" upper="${pi}" effort="10" velocity="100"/>
 	</joint>
 
 
-	<link name="orientation2">
+	<link name="tilt">
 		<inertial>
 			<origin xyz="0 0 0" rpy="0 0 0" />
 			<mass value="0.001" />
@@ -96,8 +96,8 @@
 	</link>
 
 	<joint name="pitch" type="revolute">
-		<parent link="orientation1"/>
-		<child link="orientation2"/>
+		<parent link="heading"/>
+		<child link="tilt"/>
 		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- offset from parent to child, so with direction based in parent frame -->
 		<axis xyz="0 1 0"/>
 		<limit lower="-${pi/2}" upper="${pi/2}" effort="10" velocity="100"/>
@@ -125,12 +125,16 @@
 		<visual>
 			<material name="grey"/>
 			<xacro:robot_geometry/>
+			<!--<origin xyz="0 0 -${ball_radius}" rpy="0 0 ${pi/2}" />
+			<geometry>
+				<mesh filename="package://kugle_gazebo/models/kugle.dae" scale="1.0 1.0 1.0"/>
+			</geometry>-->
 		</visual>
 	</link>
 
 	<!--<xacro:fixed_offset_joint_rpy parent="base_link" child="robot" offset="0 0 ${ball_radius}" rpy="0.2 0 0" />-->
 	<joint name="roll" type="revolute">
-		<parent link="orientation2"/>
+		<parent link="tilt"/>
 		<child link="robot"/>
 		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- offset from parent to child, so with direction based in parent frame -->
 		<axis xyz="1 0 0"/>

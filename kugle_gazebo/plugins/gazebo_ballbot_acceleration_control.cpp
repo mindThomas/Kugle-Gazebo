@@ -66,7 +66,7 @@ namespace gazebo
         sdf->GetElement("robotNamespace")->Get<std::string>();
     }
 
-    command_topic_ = "cmd_attitude";
+    command_topic_ = "cmd_quaternion";
     if (!sdf->HasElement("commandTopic")) 
     {
       ROS_WARN("BallbotAccelerationControl (ns = %s) missing <commandTopic>, "
@@ -102,17 +102,17 @@ namespace gazebo
       odometry_frame_ = sdf->GetElement("odometryFrame")->Get<std::string>();
     }
 
-      world_frame_ = "world";
-      if (!sdf->HasElement("worldFrame"))
-      {
-          ROS_WARN("BallbotAccelerationControl (ns = %s) missing <worldFrame>, "
-                   "defaults to \"%s\"",
-                   robot_namespace_.c_str(), world_frame_.c_str());
-      }
-      else
-      {
-          world_frame_ = sdf->GetElement("worldFrame")->Get<std::string>();
-      }
+    world_frame_ = "world";
+    if (!sdf->HasElement("worldFrame"))
+    {
+        ROS_WARN("BallbotAccelerationControl (ns = %s) missing <worldFrame>, "
+                 "defaults to \"%s\"",
+                 robot_namespace_.c_str(), world_frame_.c_str());
+    }
+    else
+    {
+        world_frame_ = sdf->GetElement("worldFrame")->Get<std::string>();
+    }
 
     robot_base_link_ = "base_link";
     if (!sdf->HasElement("robotBaseLink"))
@@ -120,13 +120,11 @@ namespace gazebo
       ROS_WARN("BallbotAccelerationControl (ns = %s) missing <robotBaseLink>, "
           "defaults to \"%s\"",
           robot_namespace_.c_str(), robot_base_link_.c_str());
-    } 
-    else 
+    }
+    else
     {
       robot_base_link_ = sdf->GetElement("robotBaseLink")->Get<std::string>();
     }
-
-    ROS_INFO_STREAM("robotBaseLink for force based move plugin: " << robot_base_link_  << "\n");
 
     this->link_ = parent->GetLink(robot_base_link_);
 
@@ -191,7 +189,8 @@ namespace gazebo
 
     prev_x_vel_ = 0;
     prev_y_vel_ = 0;
-    prev_rot_vel_ = 0;
+    prev_yaw_ = 0;
+    prev_yaw_for_odometry_ = 0;
     alive_ = true;
 
     attitudeReference_ = tf::Quaternion(0,0,0,1); // set as unit quaternion
@@ -205,8 +204,6 @@ namespace gazebo
 #endif
 
     last_cmd_update_time_ = ros::Time::now();
-    prev_linear_vel_ = math::Vector3::Zero;
-    prev_angular_vel_ = math::Vector3::Zero;
 
     // Ensure that ROS has been initialized and subscribe to cmd_vel
     if (!ros::isInitialized()) 
@@ -286,8 +283,15 @@ namespace gazebo
       if (parent_->GetJoint("pitch"))
           parent_->GetJoint("pitch")->SetPosition(0, pitch);
 
-      if (parent_->GetJoint("yaw"))
+      if (parent_->GetJoint("yaw")) {
+          if (copysign(1, yaw) != copysign(1, prev_yaw_)) {
+              // sign has suddenly change, probably because of a roll-over
+              if (yaw > 0) yaw -= 2*M_PI; // yaw has suddenly become positive, subtract 360 degrees
+              else yaw += 2*M_PI; // yaw has suddenly become negative, add 360 degree
+          }
           parent_->GetJoint("yaw")->SetPosition(0, yaw);
+          prev_yaw_ = yaw;
+      }
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
     ignition::math::Pose3d pose = parent_->WorldPose();
@@ -340,9 +344,22 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
        * This comes from the linear tilt-only MPC model
        * - an approximate linear relationship matching the steady state dynamics
        */
-      double accel_x_ref = acceleration_coefficient_ * attitudeReference_.y();
-      double accel_y_ref = -acceleration_coefficient_ * attitudeReference_.x();
+      // First we need to transform the attitude reference into heading frame
+      tf::Quaternion xAxis = attitudeReference_ * tf::Quaternion(1,0,0,0) * attitudeReference_.inverse();
+      double RobotYaw = atan2(xAxis.y(), xAxis.x());
+      tf::Quaternion q_heading(0,0,sin(RobotYaw/2),cos(RobotYaw/2));
+      tf::Quaternion q_tilt = q_heading.inverse() * attitudeReference_; //  tilt in heading frame
+                             //attitudeReference_ * q_heading.inverse(); // tilt in inertial frame
+      if (q_tilt.w() < 0)
+          q_tilt = q_tilt.inverse(); // invert q_tilt to take shortest rotation
 
+      // Now we use the x and y component from this quaternion to estimate the acceleration in heading frame
+      double accel_x_ref_heading_frame = acceleration_coefficient_ * q_tilt.y();
+      double accel_y_ref_heading_frame = -acceleration_coefficient_ * q_tilt.x();
+
+      // Rotate acceleration reference into inertial frame by rotatin with heading/yaw
+      double accel_x_ref = cos(yaw)*accel_x_ref_heading_frame - sin(yaw)*accel_y_ref_heading_frame;
+      double accel_y_ref = sin(yaw)*accel_x_ref_heading_frame + cos(yaw)*accel_y_ref_heading_frame;
 
       double dt = (current_time - prev_update_time_).Double();
       prev_update_time_ = current_time;
@@ -361,7 +378,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
       linear_vel_world.y = prev_y_vel_;
       angular_vel_world.z = 0; //prev_rot_vel_;   // do not rotate around z-axis
 
-      link_->SetWorldTwist(linear_vel_world, angular_vel_world, true);
+      link_->SetWorldTwist(linear_vel_world, math::Vector3(0,0,0), true);
 
       /*
       math::Vector3 linear_accel = (linear_vel - prev_linear_vel_) / dt;
@@ -462,8 +479,9 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     {
         ros::Time current_time = ros::Time::now();
         std::string world_frame = tf::resolve(tf_prefix_, world_frame_);
-        std::string base_footprint_frame =
-                tf::resolve(tf_prefix_, robot_base_link_);
+        /*std::string base_footprint_frame =
+                tf::resolve(tf_prefix_, robot_base_link_);*/
+        std::string odom_frame = tf::resolve(tf_prefix_, odometry_frame_);
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
 
@@ -473,15 +491,19 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
         math::Vector3 angular_vel = parent_->GetWorldAngularVel();
         float yaw = pose.rot.GetYaw();
 
-        tf::Transform transform;
-        transform.setIdentity();
-        transform.setOrigin(tf::Vector3(pose.pos.x, pose.pos.y, pose.pos.z));
-        transform.setRotation(tf::createQuaternionFromYaw(yaw));
+        tf::Transform base_link_tf; // base_link frame defined in world frame
+        base_link_tf.setIdentity();
+        base_link_tf.setOrigin(tf::Vector3(pose.pos.x, pose.pos.y, pose.pos.z));
+        base_link_tf.setRotation(tf::createQuaternionFromYaw(yaw));
+
+        // odom_transform_  defines the base_link frame in odometry frame
+        // Compute the transform of odometry frame defined in world frame
+        tf::Transform worldCorrectionTransform = base_link_tf * odom_transform_.inverse();
 
 #endif
         if (transform_broadcaster_.get()){
             transform_broadcaster_->sendTransform(
-                    tf::StampedTransform(transform.inverse(), current_time, base_footprint_frame, world_frame)
+                    tf::StampedTransform(worldCorrectionTransform, current_time, world_frame, odom_frame)
             );
         }
     }
@@ -503,15 +525,40 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
     odom_.twist.twist.angular.z = angular_vel.Z();
     odom_.twist.twist.linear.x  = linear_vel.X();
+    error("not implemented!");
 #else
-    math::Vector3 angular_vel = parent_->GetRelativeAngularVel();
-    math::Vector3 linear_vel = parent_->GetRelativeLinearVel();
 
-    odom_transform_= odom_transform_ * this->getTransformForMotion(linear_vel.x, angular_vel.z, step_time);
+    /* We want to create ballbot odometry which is in the heading frame */
+    // First we get the world velocity
+    math::Vector3 linear_vel = parent_->GetWorldLinearVel();
 
+    // Then we determine the yaw/heading and rotate the linear velocity to get it in the heading frame
+    tfScalar yaw, pitch, roll;
+    tf::Matrix3x3 mat(attitudeReference_);
+    mat.getEulerYPR(yaw, pitch, roll);
+    mat.setRotation(tf::createQuaternionFromYaw(yaw));
+    tf::Vector3 linear_vel_heading = mat * tf::Vector3(linear_vel.x,linear_vel.y,linear_vel.z);
+
+    // Determine angular velocity around z-axis based on discrete differentiation of yaw
+    double angular_velocity = (yaw - prev_yaw_for_odometry_) / step_time;
+    prev_yaw_for_odometry_ = yaw;
+
+    // Create delta transforms
+    /*tf::Transform deltaRot;
+    deltaRot.setIdentity();
+    deltaRot.setRotation(tf::createQuaternionFromYaw(angular_velocity*step_time));*/
+    tf::Transform deltaPos;
+    deltaPos.setIdentity();
+    deltaPos.setOrigin(tf::Vector3(static_cast<double>(linear_vel.x*step_time), static_cast<double>(linear_vel.y*step_time), 0.0));
+
+    // Update odometry transform - odometry should not include rotation here, as this is given from the internal robot joints due to the way this Gazebo simulation model was made
+    odom_transform_ = odom_transform_ * deltaPos;
+
+    // Prepare odometry message
     tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
-    odom_.twist.twist.angular.z = angular_vel.z;
-    odom_.twist.twist.linear.x  = linear_vel.x;
+    odom_.twist.twist.angular.z = angular_velocity;
+    odom_.twist.twist.linear.x  = linear_vel_heading.x();
+    odom_.twist.twist.linear.y  = linear_vel_heading.y();
 #endif
 
     odom_.header.stamp = current_time;
@@ -529,33 +576,17 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     odom_.pose.covariance[14] = 1000000000000.0;
     odom_.pose.covariance[21] = 1000000000000.0;
     odom_.pose.covariance[28] = 1000000000000.0;
-    
-#if (GAZEBO_MAJOR_VERSION >= 8)
-    if (std::abs(angular_vel.Z()) < 0.0001) {
-#else
-    if (std::abs(angular_vel.z) < 0.0001) {
-#endif
-      odom_.pose.covariance[35] = 0.01;
-    }else{
-      odom_.pose.covariance[35] = 100.0;
-    }
+
+    odom_.pose.covariance[35] = 0.01; // std::abs(angular_vel.z) < 0.0001
+    //odom_.pose.covariance[35] = 100.0;
 
     odom_.twist.covariance[0] = 0.001;
     odom_.twist.covariance[7] = 0.001;
     odom_.twist.covariance[14] = 0.001;
     odom_.twist.covariance[21] = 1000000000000.0;
     odom_.twist.covariance[28] = 1000000000000.0;
-
-#if (GAZEBO_MAJOR_VERSION >= 8)
-    if (std::abs(angular_vel.Z()) < 0.0001) {
-#else
-    if (std::abs(angular_vel.z) < 0.0001) {
-#endif
-      odom_.twist.covariance[35] = 0.01;
-    }else{
-      odom_.twist.covariance[35] = 100.0;
-    }
-
+    odom_.twist.covariance[35] = 0.01; // std::abs(angular_vel.z) < 0.0001
+    //odom_.twist.covariance[35] = 100.0;
 
 
     odometry_pub_.publish(odom_);

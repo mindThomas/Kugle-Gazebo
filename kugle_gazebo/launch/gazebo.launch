@@ -19,11 +19,12 @@
 	</include>	
 
 	<!-- urdf xml robot description loaded on the Parameter Server (for use in RViz) - this also converts the xacro into a proper urdf file -->
-	<param name="robot_description" command="$(find xacro)/xacro '$(find kugle_description)/urdf/kugle.xacro'" />
+	<param name="robot_description" command="$(find xacro)/xacro '$(find kugle_description)/urdf/kugle_rviz.xacro'" />
+	<param name="robot_description_rviz" command="$(find xacro)/xacro '$(find kugle_description)/urdf/kugle_rviz.xacro'" />
 	<param name="use_gui" value="$(arg gui)"/>
 
 	<!-- Spawn Kugle robot in Gazebo -->
-	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -z 0.5" respawn="false" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->
+	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -z 0.5" respawn="false" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
 
 	<!--<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">	
 		<remap from="/joint_states" to="/kugle/joint_states" />

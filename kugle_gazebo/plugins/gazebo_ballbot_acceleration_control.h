@@ -103,7 +103,6 @@ namespace gazebo {
       std::string odometry_topic_;
       std::string odometry_frame_;
       std::string robot_base_link_;
-      std::string robot_link_;
       std::string world_frame_;
       double odometry_rate_;
       bool publish_odometry_tf_;
@@ -122,7 +121,8 @@ namespace gazebo {
 
       double prev_x_vel_;
       double prev_y_vel_;
-      double prev_rot_vel_;
+      double prev_yaw_;
+      double prev_yaw_for_odometry_;
 
       bool alive_;
       common::Time last_odom_publish_time_;
@@ -133,8 +133,6 @@ namespace gazebo {
 #endif
 
       common::Time prev_update_time_;
-      math::Vector3 prev_linear_vel_;
-      math::Vector3 prev_angular_vel_;
 
       ros::Time last_cmd_update_time_;
   };

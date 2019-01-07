@@ -4,7 +4,7 @@
 	<!-- X axis direction is forward, Y axis direction is left -->
 
 	<!-- Physical properties -->
-	<xacro:property name="ball_radius" value="0.125" />
+	<xacro:property name="ball_radius" value="0.129" />
 	<xacro:property name="ball_mass" value="0.500" />
 	<xacro:property name="cylinder_radius" value="0.100" />
 	<xacro:property name="cylinder_height" value="0.500" />

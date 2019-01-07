@@ -28,7 +28,7 @@
 	</gazebo>
 
 
-	<gazebo reference="orientation1">
+	<gazebo reference="heading">
 		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
 		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
 		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
@@ -36,7 +36,7 @@
 		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
-	<gazebo reference="orientation2">
+	<gazebo reference="tilt">
 		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
 		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
 		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
@@ -49,7 +49,7 @@
 		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
 		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->
 		<!--<kd  value="1.0" />--> <!-- contact damping -->
-		<material>Gazebo/Grey</material>
+		<!--<material>Gazebo/Grey</material>-->
 		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
@@ -61,10 +61,11 @@
 		<!-- https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/indigo-devel/hector_gazebo_plugins/src/gazebo_ros_force_based_move.cpp -->
 		<plugin name="ballbot_acceleration_controller" filename="libgazebo_ballbot_acceleration_control.so">
 			<robotNamespace>/kugle</robotNamespace>
-			<commandTopic>cmd_attitude</commandTopic>
+			<commandTopic>cmd_quaternion</commandTopic>
 			<odometryTopic>odom_raw</odometryTopic>
 			<odometryFrame>odom</odometryFrame>
 			<odometryRate>20.0</odometryRate>
+			<worldFrame>world</worldFrame>
 			<robotBaseLink>base_link</robotBaseLink>
 			<robotBaseJoint>base_to_robot</robotBaseJoint>
 			<publishOdometryTf>1</publishOdometryTf>
