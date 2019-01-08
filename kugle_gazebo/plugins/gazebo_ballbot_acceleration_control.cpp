@@ -554,8 +554,22 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     // Update odometry transform - odometry should not include rotation here, as this is given from the internal robot joints due to the way this Gazebo simulation model was made
     odom_transform_ = odom_transform_ * deltaPos;
 
+    if (transform_broadcaster_.get()){
+          transform_broadcaster_->sendTransform(
+                  tf::StampedTransform(odom_transform_, current_time, odom_frame,
+                                       base_footprint_frame));
+    }
+
     // Prepare odometry message
-    tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
+    //tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
+    odom_.pose.pose.position.x = odom_transform_.getOrigin().x();
+    odom_.pose.pose.position.y = odom_transform_.getOrigin().y();
+    odom_.pose.pose.position.z = odom_transform_.getOrigin().z();
+    odom_.pose.pose.orientation.w = attitudeReference_.w();
+    odom_.pose.pose.orientation.x = attitudeReference_.x();
+    odom_.pose.pose.orientation.y = attitudeReference_.y();
+    odom_.pose.pose.orientation.z = attitudeReference_.z();
+
     odom_.twist.twist.angular.z = angular_velocity;
     odom_.twist.twist.linear.x  = linear_vel_heading.x();
     odom_.twist.twist.linear.y  = linear_vel_heading.y();
@@ -565,12 +579,6 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     odom_.header.frame_id = odom_frame;
     odom_.child_frame_id = base_footprint_frame;
 
-    if (transform_broadcaster_.get()){
-      transform_broadcaster_->sendTransform(
-          tf::StampedTransform(odom_transform_, current_time, odom_frame,
-              base_footprint_frame));
-    }
-    
     odom_.pose.covariance[0] = 0.001;
     odom_.pose.covariance[7] = 0.001;
     odom_.pose.covariance[14] = 1000000000000.0;
