@@ -20,9 +20,9 @@
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type='adiabatic'/>
     <physics name='default_physics' default='0' type='ode'>
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.005</max_step_size> <!-- Increase this value if the simulation runs too slow -->
+      <real_time_update_rate>200</real_time_update_rate> <!-- OBS! This value has to be 1/max_step_size -->
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
     </physics>
 
     <scene>
@@ -41,6 +41,46 @@
       <uri>model://ground_plane</uri>
     </include>
 
+    <!-- Place 10 random dumpsters -->
+    <population name="dumpster_population1">
+      <model name="dumpster_random1">
+        <include>
+          <static>true</static>
+          <uri>model://dumpster</uri>
+        </include>
+      </model>
+      <pose>0 0 0 0 0 0</pose>
+      <box>
+        <size>10 10 0.01</size>
+      </box>
+      <model_count>10</model_count>
+      <distribution>
+        <type>random</type>
+      </distribution>
+    </population>
 
+    <!--<include>
+      <uri>model://willowgarage</uri>
+    </include>
+
+    <include>
+      <uri>model://grey_wall</uri>
+      <pose>0 70 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://dumpster</uri>
+      <pose>0 100 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://mailbox</uri>
+      <pose>0 40 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://lamp_post</uri>
+      <pose>0 50 0 0 0 0</pose>
+    </include>-->
   </world>
 </sdf>

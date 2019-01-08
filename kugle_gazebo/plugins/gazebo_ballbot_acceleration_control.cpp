@@ -245,6 +245,13 @@ namespace gazebo
 
   }
 
+  float GazeboRosBallbotAccelerationControl::unwrap(float previous_angle, float new_angle)
+  {
+      float d = new_angle - previous_angle;
+      d = d > M_PI ? d - 2 * M_PI : (d < -M_PI ? d + 2 * M_PI : d);
+      return previous_angle + d;
+  }
+
   // Update the controller
   void GazeboRosBallbotAccelerationControl::UpdateChild()
   {
@@ -284,13 +291,14 @@ namespace gazebo
           parent_->GetJoint("pitch")->SetPosition(0, pitch);
 
       if (parent_->GetJoint("yaw")) {
-          if (abs(yaw) > M_PI/2) {
+          /*if (abs(yaw) > M_PI/2) {
               if (copysign(1, yaw) != copysign(1, prev_yaw_)) {
                   // sign has suddenly change, probably because of a roll-over
                   if (yaw > 0) yaw -= 2 * M_PI; // yaw has suddenly become positive, subtract 360 degrees
                   else yaw += 2 * M_PI; // yaw has suddenly become negative, add 360 degree
               }
-          }
+          }*/
+          yaw = unwrap(prev_yaw_, yaw);
           parent_->GetJoint("yaw")->SetPosition(0, yaw);
           prev_yaw_ = yaw;
       }

@@ -73,6 +73,7 @@ namespace gazebo {
       void publishWorldGroundTruth(void);
       void publishOdometry(double step_time);
       void publishJointStates(void);
+      float unwrap(float previous_angle, float new_angle);
 
       tf::Transform getTransformForMotion(double linear_vel_x, double angular_vel, double timeSeconds) const;
 

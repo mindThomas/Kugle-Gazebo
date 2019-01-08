@@ -34,4 +34,13 @@
 		<xacro:cylinder_inertial mass="${cylinder_mass}" radius="${cylinder_radius}" length="${cylinder_height}" /> 
 	</xacro:macro>
 
+	<!-- LiDAR geometry -->
+	<xacro:macro name="lidar_geometry">
+		<origin xyz="0 0 -0.019585" rpy="0 0 0" />
+		<geometry>
+			<!-- SICK TIM571 LiDAR bounding box -->
+			<box size="0.060 0.061 0.08575" />
+		</geometry>
+	</xacro:macro>
+
 </robot>

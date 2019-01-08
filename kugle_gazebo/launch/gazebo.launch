@@ -5,8 +5,7 @@
 	<!-- Based on https://github.com/ros/urdf_sim_tutorial/blob/master/launch/gazebo.launch from the guide http://wiki.ros.org/urdf/Tutorials/Using%20a%20URDF%20in%20Gazebo -->
 
 	<arg name="world_name" default="sim" />
-	<arg name="gui" default="true" />
-	<arg name="run_camera" default="false"/>
+	<arg name="gui" default="true" /> <!-- whether to display Gazebo GUI (rendering) or not (run headless) -->
 
 	<!-- Open Gazebo with specified World model -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -15,7 +14,7 @@
 		<arg name="debug" value="false" />
 		<arg name="paused" value="false"/>
 		<arg name="use_sim_time" value="true"/>
-		<arg name="headless" value="false"/>
+		<arg name="headless" value="$(eval not arg('gui'))"/>
 	</include>	
 
 	<!-- urdf xml robot description loaded on the Parameter Server (for use in RViz) - this also converts the xacro into a proper urdf file -->
@@ -35,6 +34,9 @@
 		<param name="publish_frequency" type="double" value="50.0" />
 		<remap from="/joint_states" to="/kugle/joint_states" /> <!-- this line is very important for visualization in RVIZ when used in conjunction with Gazebo (because of the namespace change) -->
 	</node>
+
+	<!-- Convert depth image from RGBD camera into registered (hence colored) pointcloud -->
+	<include file="$(find kugle_gazebo)/launch/depth_proc.launch" />
 
 	<!-- rviz display -->
 	<node name="rviz_visualizer" pkg="rviz" type="rviz" required="true" args="-d $(find kugle_description)/rviz/tf_display.rviz"/>

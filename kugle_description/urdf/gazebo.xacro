@@ -53,6 +53,18 @@
 		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
+	<gazebo reference="sick_left_link">
+		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<material>Gazebo/Grey</material>
+	</gazebo>
+
+	<gazebo reference="sick_right_link">
+		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
+		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
+		<material>Gazebo/Grey</material>
+	</gazebo>
+
 	<!-- We need to link Gazebo and ROS and let Gazebo load all the previously defined ROS parameters. Therefore this Gazebo file should be included in the end of the main xacro file! --> 
 
 	<!-- Link Gazebo and ROS through plugins -->
@@ -77,7 +89,84 @@
 
 	<!-- Plugins, eg. sensors -->
 	<!-- hokuyo LiDAR can be found here: https://github.com/mit-racecar/racecar-simulator/blob/master/racecar_description/urdf/racecar.gazebo#L59 -->
-
 	<!-- camera sensor might be found here: https://github.com/JoshMarino/gazebo_and_ros_control or here: http://gazebosim.org/tutorials?tut=ros_gzplugins -->
+
+	<gazebo reference="sick_left_link">
+		<!-- SICK TIM571 - https://cdn.sick.com/media/pdf/4/44/444/dataSheet_TiM571-2050101_1075091_en.pdf -->
+		<!-- See also http://wiki.ros.org/sick_tim -->
+		<sensor name="sick_left_sensor" type="ray"> <!-- "ray" or "gpu_ray" -->
+			<pose>0 0 0 0 0 0</pose>
+			<update_rate>15</update_rate>
+			<always_on>${visualize_lidar}</always_on>
+			<visualize>${visualize_lidar}</visualize>
+			<ray>
+				<scan>
+					<horizontal>
+						<samples>810</samples> <!-- 270 deg span with ~0.33 deg (3 scans pr. deg) -->
+						<resolution>1</resolution>
+						<min_angle>-${pi/4}</min_angle> <!-- -45 deg -->
+						<max_angle>${5*pi/4}</max_angle> <!-- 225 deg -->
+					</horizontal>
+				</scan>
+				<range>
+					<min>0.05</min>
+					<max>25.0</max>
+					<resolution>0.01</resolution> <!-- It has not been possible to find this number in the datasheet?! -->
+				</range>
+				<noise>
+					<type>gaussian</type>
+					<!-- Noise parameters based on published spec for SICK TIM571
+                         achieving "+-20mm" accuracy at range < 10m.  A mean of 0.0m and
+                         stddev of 0.02m will put 99.7% of samples within 0.06m of the true
+                         reading. -->
+					<mean>0.0</mean>
+					<stddev>0.02</stddev>
+				</noise>
+			</ray>
+			<plugin name="gazebo_sick_left_controller" filename="libgazebo_ros_laser.so"> <!-- "libgazebo_ros_laser.so" or "libgazebo_ros_gpu_laser.so" -->
+				<topicName>/kugle/laser/left/scan</topicName>
+				<frameName>sick_left_link</frameName>
+			</plugin>
+		</sensor>
+	</gazebo>
+
+	<gazebo reference="sick_right_link">
+		<!-- SICK TIM571 - https://cdn.sick.com/media/pdf/4/44/444/dataSheet_TiM571-2050101_1075091_en.pdf -->
+		<!-- See also http://wiki.ros.org/sick_tim -->
+		<sensor name="sick_right_sensor" type="ray"> <!-- "ray" or "gpu_ray" -->
+			<pose>0 0 0 0 0 0</pose>
+			<update_rate>15</update_rate>
+			<always_on>${visualize_lidar}</always_on>
+			<visualize>${visualize_lidar}</visualize>
+			<ray>
+				<scan>
+					<horizontal>
+						<samples>810</samples> <!-- 270 deg span with ~0.33 deg (3 scans pr. deg) -->
+						<resolution>1</resolution>
+						<min_angle>-${pi/4}</min_angle> <!-- -45 deg -->
+						<max_angle>${5*pi/4}</max_angle> <!-- 225 deg -->
+					</horizontal>
+				</scan>
+				<range>
+					<min>0.05</min>
+					<max>25.0</max>
+					<resolution>0.01</resolution> <!-- It has not been possible to find this number in the datasheet?! -->
+				</range>
+				<noise>
+					<type>gaussian</type>
+					<!-- Noise parameters based on published spec for SICK TIM571
+                         achieving "+-20mm" accuracy at range < 10m.  A mean of 0.0m and
+                         stddev of 0.02m will put 99.7% of samples within 0.06m of the true
+                         reading. -->
+					<mean>0.0</mean>
+					<stddev>0.02</stddev>
+				</noise>
+			</ray>
+			<plugin name="gazebo_sick_right_controller" filename="libgazebo_ros_laser.so"> <!-- "libgazebo_ros_laser.so" or "libgazebo_ros_gpu_laser.so" -->
+				<topicName>/kugle/laser/right/scan</topicName>
+				<frameName>sick_right_link</frameName>
+			</plugin>
+		</sensor>
+	</gazebo>
 
 </robot>
