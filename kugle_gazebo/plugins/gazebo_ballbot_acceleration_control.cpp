@@ -284,10 +284,12 @@ namespace gazebo
           parent_->GetJoint("pitch")->SetPosition(0, pitch);
 
       if (parent_->GetJoint("yaw")) {
-          if (copysign(1, yaw) != copysign(1, prev_yaw_)) {
-              // sign has suddenly change, probably because of a roll-over
-              if (yaw > 0) yaw -= 2*M_PI; // yaw has suddenly become positive, subtract 360 degrees
-              else yaw += 2*M_PI; // yaw has suddenly become negative, add 360 degree
+          if (abs(yaw) > M_PI/2) {
+              if (copysign(1, yaw) != copysign(1, prev_yaw_)) {
+                  // sign has suddenly change, probably because of a roll-over
+                  if (yaw > 0) yaw -= 2 * M_PI; // yaw has suddenly become positive, subtract 360 degrees
+                  else yaw += 2 * M_PI; // yaw has suddenly become negative, add 360 degree
+              }
           }
           parent_->GetJoint("yaw")->SetPosition(0, yaw);
           prev_yaw_ = yaw;
@@ -536,7 +538,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     tfScalar yaw, pitch, roll;
     tf::Matrix3x3 mat(attitudeReference_);
     mat.getEulerYPR(yaw, pitch, roll);
-    mat.setRotation(tf::createQuaternionFromYaw(yaw));
+    mat.setRotation(tf::createQuaternionFromYaw(-yaw));
     tf::Vector3 linear_vel_heading = mat * tf::Vector3(linear_vel.x,linear_vel.y,linear_vel.z);
 
     // Determine angular velocity around z-axis based on discrete differentiation of yaw
