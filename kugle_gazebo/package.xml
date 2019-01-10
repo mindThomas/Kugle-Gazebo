@@ -68,6 +68,7 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <depend>depth_image_proc</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

@@ -49,8 +49,8 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <exec_depend>realsense_gazebo_plugin</exec_depend> <!-- https://github.com/SyrianSpock/realsense_gazebo_plugin -->
-
+  <depend>realsense_gazebo_plugin</depend> <!-- https://github.com/mindThomas/realsense_gazebo_plugin -->
+  <depend>gazebo_ros_laser</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

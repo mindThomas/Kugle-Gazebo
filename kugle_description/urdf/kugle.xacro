@@ -16,9 +16,6 @@
 	<xacro:include filename="$(find kugle_description)/urdf/physical.xacro" />
 	<xacro:include filename="$(find kugle_description)/urdf/joints.xacro" />
 	<xacro:include filename="$(find kugle_description)/urdf/transmissions.xacro" />
-
-	<!-- Link Gazebo and ROS - this has to happen as the last thing -->
-	<xacro:include filename="$(find kugle_description)/urdf/gazebo.xacro" />
 	<xacro:include filename="$(find kugle_description)/urdf/materials.xacro" />
 
 	<!-- Base link is at the contact point (hence ground level) -->
@@ -180,5 +177,17 @@
 	</link>
 
 	<xacro:fixed_offset_joint_rpy parent="robot" child="sick_right_link" offset="0 -0.123 0.33757" rpy="0 0 ${pi}" />
+
+	<!-- Link Gazebo and ROS - this has to happen as the last thing -->
+	<xacro:include filename="$(find kugle_description)/urdf/gazebo.xacro" />
+
+	<!-- Add realsense camera link -->
+	<!-- Note that this Realsense camera is not the correct one, hence the physical location (frames) of the different image streams will be different in real life -->
+	<!-- Import macro for realsense-RS200 camera-->
+	<xacro:include filename="$(find realsense_gazebo_plugin)/urdf/realsense-RS200.macro.xacro"/>
+	<!-- Create camera instance -->
+	<xacro:realsense-rs200 prefix="" parent="robot">
+		<origin xyz="0.05 0 1.11" rpy="0 0.25 0" />
+	</xacro:realsense-rs200>
 
 </robot>
