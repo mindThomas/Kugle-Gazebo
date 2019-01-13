@@ -103,8 +103,8 @@ namespace gazebo {
       std::string command_topic_;
       std::string odometry_topic_;
       std::string odometry_frame_;
-      std::string robot_base_link_;
       std::string world_frame_;
+      std::string contact_point_link_;
       double odometry_rate_;
       bool publish_odometry_tf_;
       double cmd_timeout_;

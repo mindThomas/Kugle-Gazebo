@@ -18,12 +18,12 @@
 	</include>	
 
 	<!-- urdf xml robot description loaded on the Parameter Server (for use in RViz) - this also converts the xacro into a proper urdf file -->
-	<param name="robot_description" command="$(find xacro)/xacro '$(find kugle_description)/urdf/kugle_rviz.xacro'" />
-	<param name="robot_description_rviz" command="$(find xacro)/xacro '$(find kugle_description)/urdf/kugle_rviz.xacro'" />
+	<param name="robot_description" command="$(find xacro)/xacro '$(find kugle_sim_description)/urdf/kugle_rviz.xacro'" />
+	<param name="robot_description_rviz" command="$(find xacro)/xacro '$(find kugle_sim_description)/urdf/kugle_rviz.xacro'" />
 	<param name="use_gui" value="$(arg gui)"/>
 
 	<!-- Spawn Kugle robot in Gazebo -->
-	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -z 0.5" respawn="false" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
+	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -z 0.5" respawn="true" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
 
 	<!--<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">	
 		<remap from="/joint_states" to="/kugle/joint_states" />
@@ -31,14 +31,14 @@
 
 	<!-- calculate and publish the tf's for each joint based on the urdf file within robot_description -->
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
-		<param name="publish_frequency" type="double" value="50.0" />
-		<remap from="/joint_states" to="/kugle/joint_states" /> <!-- this line is very important for visualization in RVIZ when used in conjunction with Gazebo (because of the namespace change) -->
+		<param name="publish_frequency" type="double" value="200" /> <!-- Should match Odometry rate set in "gazebo.xacro" -->
+		<remap from="/joint_states" to="/joint_states" /> <!-- if the namespace is changed then it is important to change this line such that the namespaces /ns/joint_states is remapped to just /joint_states -->
 	</node>
 
 	<!-- Convert depth image from RGBD camera into registered (hence colored) pointcloud -->
 	<include file="$(find kugle_gazebo)/launch/depth_proc.launch" />
 
 	<!-- rviz display -->
-	<node name="rviz_visualizer" pkg="rviz" type="rviz" required="true" args="-d $(find kugle_description)/rviz/tf_display.rviz"/>
+	<node name="rviz_visualizer" pkg="rviz" type="rviz" required="true" args="-d $(find kugle_sim_description)/rviz/tf_display.rviz"/>
 
 </launch>

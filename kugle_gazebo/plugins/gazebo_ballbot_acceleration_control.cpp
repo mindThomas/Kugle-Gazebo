@@ -67,7 +67,7 @@ namespace gazebo
     }
 
     command_topic_ = "cmd_quaternion";
-    if (!sdf->HasElement("commandTopic")) 
+    if (!sdf->HasElement("commandTopic"))
     {
       ROS_WARN("BallbotAccelerationControl (ns = %s) missing <commandTopic>, "
           "defaults to \"%s\"", 
@@ -114,27 +114,27 @@ namespace gazebo
         world_frame_ = sdf->GetElement("worldFrame")->Get<std::string>();
     }
 
-    robot_base_link_ = "base_link";
-    if (!sdf->HasElement("robotBaseLink"))
+    contact_point_link_ = "contact_point";
+    if (!sdf->HasElement("contactPointLink"))
     {
-      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <robotBaseLink>, "
+      ROS_WARN("BallbotAccelerationControl (ns = %s) missing <contactPointLink>, "
           "defaults to \"%s\"",
-          robot_namespace_.c_str(), robot_base_link_.c_str());
+               contact_point_link_.c_str(), contact_point_link_.c_str());
     }
     else
     {
-      robot_base_link_ = sdf->GetElement("robotBaseLink")->Get<std::string>();
+        contact_point_link_ = sdf->GetElement("contactPointLink")->Get<std::string>();
     }
 
-    this->link_ = parent->GetLink(robot_base_link_);
+    this->link_ = parent->GetLink(contact_point_link_);
 
     if (!this->link_)
     {
-      ROS_FATAL_STREAM("Could not find link for base frame: " << robot_base_link_ << "\n");
+      ROS_FATAL_STREAM("Could not find link for contact point: " << contact_point_link_ << "\n");
       return;
     }
 
-    odometry_rate_ = 20.0;
+    odometry_rate_ = 200.0;
     if (!sdf->HasElement("odometryRate")) 
     {
       ROS_WARN("BallbotAccelerationControl (ns = %s) missing <odometryRate>, "
@@ -409,7 +409,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     //parent_->SetAngularVel(math::Vector3(0, 0, rot_));
 
 
-    /* Handle Odomotry publish */
+    /* Handle Odometry publish */
     if (odometry_rate_ > 0.0) {
       double seconds_since_last_update = 
         (current_time - last_odom_publish_time_).Double();
@@ -524,7 +524,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     ros::Time current_time = ros::Time::now();
     std::string odom_frame = tf::resolve(tf_prefix_, odometry_frame_);
     std::string base_footprint_frame = 
-      tf::resolve(tf_prefix_, robot_base_link_);
+      tf::resolve(tf_prefix_, contact_point_link_);
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
     ignition::math::Vector3d angular_vel = parent_->RelativeAngularVel();

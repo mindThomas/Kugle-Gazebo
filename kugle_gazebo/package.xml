@@ -62,7 +62,7 @@
   <build_export_depend>nav_msgs</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <exec_depend>gazebo_ros</exec_depend>
-  <exec_depend>kugle_description</exec_depend>  <!-- https://github.com/mindThomas/Kugle-ROS -->
+  <exec_depend>kugle_sim_description</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
