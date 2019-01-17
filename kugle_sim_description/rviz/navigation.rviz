@@ -8,7 +8,6 @@ Panels:
         - /Status1
         - /RobotModel1/Links1
         - /TF1/Frames1
-        - /Map1/Status1
       Splitter Ratio: 0.5
     Tree Height: 413
   - Class: rviz/Selection
@@ -160,28 +159,27 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          {}
-        odom:
-          contact_point:
-            ball:
-              heading:
-                tilt:
-                  base_link:
-                    rs200_camera:
-                      color:
+          odom:
+            contact_point:
+              ball:
+                heading:
+                  tilt:
+                    base_link:
+                      rs200_camera:
+                        color:
+                          {}
+                        depth:
+                          {}
+                        ired1:
+                          {}
+                        ired2:
+                          {}
+                      sick_left_link:
                         {}
-                      depth:
+                      sick_right_link:
                         {}
-                      ired1:
-                        {}
-                      ired2:
-                        {}
-                    sick_left_link:
-                      {}
-                    sick_right_link:
-                      {}
-          world:
-            {}
+            world:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz/Axes
@@ -333,6 +331,88 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Alpha: 1
+      Arrow Length: 0.300000012
+      Axes Length: 0.300000012
+      Axes Radius: 0.00999999978
+      Class: rviz/PoseArray
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.0700000003
+      Head Radius: 0.0299999993
+      Name: PoseArray
+      Shaft Length: 0.230000004
+      Shaft Radius: 0.00999999978
+      Shape: Arrow (Flat)
+      Topic: /particlecloud
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.300000012
+      Line Style: Lines
+      Line Width: 0.0299999993
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.0299999993
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
+      Topic: /move_base/DWAPlannerROS/local_plan
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.300000012
+      Line Style: Lines
+      Line Width: 0.0299999993
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.0299999993
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
+      Topic: /move_base/NavfnROS/plan
+      Unreliable: false
+      Value: true
+    - Alpha: 0.200000003
+      Class: rviz/Map
+      Color Scheme: costmap
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /move_base/global_costmap/costmap
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
+    - Alpha: 0.699999988
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /move_base/local_costmap/costmap
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 139; 139; 139
@@ -358,25 +438,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.363482
+      Distance: 10
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.131383359
-        Y: -0.215693682
-        Z: 1.15313447
-      Focal Shape Fixed Size: true
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.484795958
+      Pitch: 0.785398185
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.10040426
+      Yaw: 0.785398185
     Saved: ~
 Window Geometry:
   Displays:

@@ -134,6 +134,18 @@ namespace gazebo
       return;
     }
 
+      heading_link_ = "heading";
+      if (!sdf->HasElement("headingLink"))
+      {
+          ROS_WARN("BallbotAccelerationControl (ns = %s) missing <headingLink>, "
+                   "defaults to \"%s\"",
+                   heading_link_.c_str(), heading_link_.c_str());
+      }
+      else
+      {
+          heading_link_ = sdf->GetElement("headingLink")->Get<std::string>();
+      }
+
     odometry_rate_ = 200.0;
     if (!sdf->HasElement("odometryRate")) 
     {
@@ -507,13 +519,13 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
         base_link_tf.setRotation(tf::createQuaternionFromYaw(yaw));
 
         // odom_transform_  defines the base_link frame in odometry frame
-        // Compute the transform of odometry frame defined in world frame
-        tf::Transform worldCorrectionTransform = base_link_tf * odom_transform_.inverse();
+        // Compute the transform of world frame defined in odometry frame
+        tf::Transform worldCorrectionTransform = odom_transform_ * base_link_tf.inverse();
 
 #endif
         if (transform_broadcaster_.get()){
             transform_broadcaster_->sendTransform(
-                    tf::StampedTransform(worldCorrectionTransform, current_time, world_frame, odom_frame)
+                    tf::StampedTransform(worldCorrectionTransform, current_time, odom_frame, world_frame)
             );
         }
     }
@@ -523,8 +535,8 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     /* Odometry is based on integration of the relative velocity in forward direction and angular (yaw) velocity */
     ros::Time current_time = ros::Time::now();
     std::string odom_frame = tf::resolve(tf_prefix_, odometry_frame_);
-    std::string base_footprint_frame = 
-      tf::resolve(tf_prefix_, contact_point_link_);
+    std::string contact_point_frame = tf::resolve(tf_prefix_, contact_point_link_);
+    std::string heading_frame = tf::resolve(tf_prefix_, heading_link_);
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
     ignition::math::Vector3d angular_vel = parent_->RelativeAngularVel();
@@ -546,7 +558,8 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     tfScalar yaw, pitch, roll;
     tf::Matrix3x3 mat(attitudeReference_);
     mat.getEulerYPR(yaw, pitch, roll);
-    mat.setRotation(tf::createQuaternionFromYaw(-yaw));
+    tf::Quaternion q_heading = tf::createQuaternionFromYaw(-yaw);
+    mat.setRotation(q_heading);
     tf::Vector3 linear_vel_heading = mat * tf::Vector3(linear_vel.x,linear_vel.y,linear_vel.z);
 
     // Determine angular velocity around z-axis based on discrete differentiation of yaw
@@ -567,18 +580,21 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     if (transform_broadcaster_.get()){
           transform_broadcaster_->sendTransform(
                   tf::StampedTransform(odom_transform_, current_time, odom_frame,
-                                       base_footprint_frame));
+                                       contact_point_frame));
     }
 
     // Prepare odometry message
+    //   This represents an estimate of a position and velocity in free space.
+    //   The pose in this message should be specified in the coordinate frame given by header.frame_id.
+    //   The twist in this message should be specified in the coordinate frame given by the child_frame_id
     //tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
     odom_.pose.pose.position.x = odom_transform_.getOrigin().x();
     odom_.pose.pose.position.y = odom_transform_.getOrigin().y();
     odom_.pose.pose.position.z = odom_transform_.getOrigin().z();
-    odom_.pose.pose.orientation.w = attitudeReference_.w();
-    odom_.pose.pose.orientation.x = attitudeReference_.x();
-    odom_.pose.pose.orientation.y = attitudeReference_.y();
-    odom_.pose.pose.orientation.z = attitudeReference_.z();
+    odom_.pose.pose.orientation.w = q_heading.w();
+    odom_.pose.pose.orientation.x = q_heading.x();
+    odom_.pose.pose.orientation.y = q_heading.y();
+    odom_.pose.pose.orientation.z = q_heading.z();
 
     odom_.twist.twist.angular.z = angular_velocity;
     odom_.twist.twist.linear.x  = linear_vel_heading.x();
@@ -587,7 +603,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
 
     odom_.header.stamp = current_time;
     odom_.header.frame_id = odom_frame;
-    odom_.child_frame_id = base_footprint_frame;
+    odom_.child_frame_id = heading_frame;
 
     odom_.pose.covariance[0] = 0.001;
     odom_.pose.covariance[7] = 0.001;

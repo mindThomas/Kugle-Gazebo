@@ -80,6 +80,7 @@
 			<odometryRate>200.0</odometryRate>
 			<worldFrame>world</worldFrame>
 			<contactPointLink>contact_point</contactPointLink>
+			<headingLink>heading</headingLink>
 			<publishOdometryTf>1</publishOdometryTf>
 			<cmdTimeout>1.0</cmdTimeout>
 			<accelerationCoefficient>13.71</accelerationCoefficient> <!-- Approximate linear relationship between Quaternion reference component and steady state acceleration -->
