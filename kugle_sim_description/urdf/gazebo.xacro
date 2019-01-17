@@ -10,14 +10,13 @@
 
 	<!-- Visual and physical properties -->
 	<!-- See http://gazebosim.org/tutorials?tut=ros_urdf&cat=connect_ros -->
-	<gazebo reference="base_link">
+	<gazebo reference="contact_point">
 		<mu1>0.0</mu1>
 		<mu2>0.0</mu2>
 		<!--<kp>1000000.0</kp>
 		<kd>100.0</kd>-->
 		<minDepth>0.001</minDepth>
 		<maxVel>100.0</maxVel>
-		<maxForce>100.0</maxForce>
 	</gazebo>
 
 	<gazebo reference="ball">
@@ -46,7 +45,7 @@
 		<!--<turnGravityOff>true</turnGravityOff>-->
 	</gazebo>
 
-	<gazebo reference="robot">
+	<gazebo reference="base_link">
 		<mu1 value="0.0"/> <!-- Columb friction coefficient in fdir1 direction -->
 		<mu2 value="0.0"/> <!-- Columb friction in perpendicular direction to fdir1 -->
 		<!--<kp  value="10000000.0" />--> <!-- contact stiffness -->

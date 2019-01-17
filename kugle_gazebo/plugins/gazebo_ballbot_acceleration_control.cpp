@@ -232,7 +232,7 @@ namespace gazebo
 
     vel_sub_ = rosnode_->subscribe(so);
     odometry_pub_ = rosnode_->advertise<nav_msgs::Odometry>(odometry_topic_, 1);
-    joints_pub_ = rosnode_->advertise<sensor_msgs::JointState>(robot_namespace_ + "/joint_states", 1);
+    joints_pub_ = rosnode_->advertise<sensor_msgs::JointState>("/joint_states", 1);
 
     // start custom queue for diff drive
     callback_queue_thread_ = 

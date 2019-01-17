@@ -4,8 +4,12 @@
 
 	<!-- Based on https://github.com/ros/urdf_sim_tutorial/blob/master/launch/gazebo.launch from the guide http://wiki.ros.org/urdf/Tutorials/Using%20a%20URDF%20in%20Gazebo -->
 
-	<arg name="world_name" default="sim" />
+	<arg name="world_name" default="control_lab" />
 	<arg name="gui" default="true" /> <!-- whether to display Gazebo GUI (rendering) or not (run headless) -->
+
+	<!-- Default starting position of robot -->
+	<arg name="x" default="0" />
+	<arg name="y" default="0" />
 
 	<!-- Open Gazebo with specified World model -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -23,7 +27,7 @@
 	<param name="use_gui" value="$(arg gui)"/>
 
 	<!-- Spawn Kugle robot in Gazebo -->
-	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -z 0.5" respawn="true" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
+	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -x $(arg x) -y $(arg y) -z 0.2" respawn="false" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
 
 	<!--<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">	
 		<remap from="/joint_states" to="/kugle/joint_states" />

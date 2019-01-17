@@ -203,6 +203,10 @@ target_link_libraries(gazebo_ballbot_acceleration_control ${Boost_LIBRARIES} ${G
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+install(DIRECTORY launch worlds models
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        PATTERN "*~" EXCLUDE)
+
 #############
 ## Testing ##
 #############
