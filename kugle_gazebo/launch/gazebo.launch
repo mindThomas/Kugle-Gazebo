@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   	<env name="ROSCONSOLE_CONFIG_FILE" value="$(find kugle_gazebo)/config/rosconsole.conf"/>
+	<param name="/use_sim_time" value="true"/>
 
 	<!-- Based on https://github.com/ros/urdf_sim_tutorial/blob/master/launch/gazebo.launch from the guide http://wiki.ros.org/urdf/Tutorials/Using%20a%20URDF%20in%20Gazebo -->
 
@@ -34,15 +35,12 @@
 	</node>-->
 
 	<!-- calculate and publish the tf's for each joint based on the urdf file within robot_description -->
-	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen">
 		<param name="publish_frequency" type="double" value="200" /> <!-- Should match Odometry rate set in "gazebo.xacro" -->
 		<remap from="/joint_states" to="/joint_states" /> <!-- if the namespace is changed then it is important to change this line such that the namespaces /ns/joint_states is remapped to just /joint_states -->
 	</node>
 
-	<!-- Convert depth image from RGBD camera into registered (hence colored) pointcloud -->
-	<include file="$(find kugle_gazebo)/launch/depth_proc.launch" />
-
 	<!-- rviz display -->
-	<node name="rviz_visualizer" pkg="rviz" type="rviz" required="true" args="-d $(find kugle_sim_description)/rviz/tf_display.rviz"/>
+	<node name="rviz_visualizer" pkg="rviz" type="rviz" required="false" args="-d $(find kugle_sim_description)/rviz/tf_display.rviz"/>
 
 </launch>
