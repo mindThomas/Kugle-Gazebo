@@ -8,7 +8,6 @@ Panels:
         - /Status1
         - /RobotModel1/Links1
         - /TF1/Frames1
-        - /Map1/Status1
       Splitter Ratio: 0.5
     Tree Height: 413
   - Class: rviz/Selection
@@ -139,8 +138,6 @@ Visualization Manager:
           Value: true
         ired2:
           Value: true
-        map:
-          Value: true
         odom:
           Value: true
         rs200_camera:
@@ -159,8 +156,6 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          {}
         odom:
           contact_point:
             ball:
@@ -337,7 +332,7 @@ Visualization Manager:
   Global Options:
     Background Color: 139; 139; 139
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:

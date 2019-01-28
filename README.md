@@ -6,6 +6,7 @@ Notice that this model is not a complete simulation model of the ballbot but is 
 # Install catkin tool
 ```bash
 sudo apt-get install python-catkin-tools
+```
 
 # Cloning
 To set up the simulation environment you need to clone the necessary repositories into an existing or new catkin workspace.
