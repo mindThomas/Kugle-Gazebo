@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<robot name="pedestrian" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+	<!-- X axis direction is forward, Y axis direction is left -->
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/parameters.xacro" />
+
+	<!-- Box for test -->
+	<xacro:macro name="testbox_geometry"> <!-- Simulation visual appearance -->
+		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- origin (0,0,0) is in the center of the sphere -->
+		<geometry>
+			<box size="${box_width} ${box_width} ${box_height}" />
+		</geometry>
+	</xacro:macro>
+	<xacro:macro name="testbox_collision"> <!-- Physical properties -->
+		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- origin (0,0,0) is in the center of the sphere -->
+		<geometry>
+			<box size="${box_width} ${box_width} ${box_height}" />
+		</geometry>
+	</xacro:macro>
+	<xacro:macro name="testbox_inertial"> <!-- Physical properties -->
+		<origin xyz="0 0 0" rpy="0 0 0" /> <!-- origin (0,0,0) is in the center of the box -->
+		<xacro:box_inertial mass="${box_mass}" length="${box_width}" width="${box_width}" height="${box_height}" /> 
+	</xacro:macro>
+
+</robot>

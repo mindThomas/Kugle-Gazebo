@@ -1,34 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(kugle_gazebo)
+project(pedestrian_sim_description)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  gazebo_ros
-  roscpp
-  std_msgs
-  geometry_msgs
-  nav_msgs 
-  sensor_msgs
-)
+find_package(catkin REQUIRED)
 
 ## System dependencies are found with CMake's conventions
-## Find gazebo
-if(POLICY CMP0054)
-  cmake_policy(SET CMP0054 NEW)
-endif()
-find_package(gazebo REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
-include_directories(${GAZEBO_INCLUDE_DIRS})
-link_directories(${GAZEBO_LIBRARY_DIRS})
-
-## Find Boost
-find_package(Boost REQUIRED COMPONENTS thread)
-include_directories(${Boost_INCLUDE_DIRS})
+# find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -117,10 +99,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS plugins
-  LIBRARIES gazebo_ballbot_acceleration_control gazebo_position_control
-  CATKIN_DEPENDS gazebo_ros roscpp std_msgs geometry_msgs nav_msgs sensor_msgs
-  DEPENDS
+#  INCLUDE_DIRS include
+#  LIBRARIES kugle_description
+#  CATKIN_DEPENDS other_catkin_pkg
+#  DEPENDS system_lib
 )
 
 ###########
@@ -130,20 +112,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  plugins
-  ${catkin_INCLUDE_DIRS}
+# include
+# ${catkin_INCLUDE_DIRS}
 )
-
-add_library(gazebo_ballbot_acceleration_control plugins/gazebo_ballbot_acceleration_control.cpp)
-target_link_libraries(gazebo_ballbot_acceleration_control ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
-
-add_library(gazebo_position_control plugins/gazebo_position_control.cpp)
-target_link_libraries(gazebo_position_control ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
-
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/kugle_gazebo.cpp
+#   src/${PROJECT_NAME}/kugle_description.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -154,7 +129,7 @@ target_link_libraries(gazebo_position_control ${Boost_LIBRARIES} ${GAZEBO_LIBRAR
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/kugle_gazebo_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/kugle_description_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -206,16 +181,12 @@ target_link_libraries(gazebo_position_control ${Boost_LIBRARIES} ${GAZEBO_LIBRAR
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
-install(DIRECTORY launch worlds models
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        PATTERN "*~" EXCLUDE)
-
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_kugle_gazebo.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_kugle_description.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

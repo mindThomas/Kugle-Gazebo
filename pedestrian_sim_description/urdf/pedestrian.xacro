@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<robot name="pedestrian" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/functions.xacro" />
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/physical.xacro" />
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/joints.xacro" />
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/transmissions.xacro" />
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/materials.xacro" />
+
+	<!-- Base link is at the contact point (hence ground level) -->
+	<link name="contact_point"/>
+
+
+	<!--<link name="contact_point">
+		<origin xyz="0 0 -${ball_radius}" rpy="0 0 0" />
+	</link>
+
+	<xacro:fixed_offset_joint parent="contact_point" child="base_link" offset="0 0 ${ball_radius}"/>--> <!-- contact_point needs to be parent since actuation will affect this point -->
+
+	<link name="base_link">
+		<!--<inertial>
+			<xacro:ball_inertial/>
+		</inertial>-->
+		<inertial>
+			<xacro:testbox_inertial/>
+		</inertial>
+		<collision>
+			<xacro:testbox_collision/>
+		</collision>
+		<visual>
+			<material name="grey"/>
+			<xacro:testbox_geometry/>
+		</visual>
+	</link>
+
+	<xacro:fixed_offset_joint parent="contact_point" child="base_link" offset="0 0 ${box_height/2}"/>
+
+	<!-- Link Gazebo and ROS - this has to happen as the last thing -->
+	<xacro:include filename="$(find pedestrian_sim_description)/urdf/gazebo.xacro" />
+
+</robot>

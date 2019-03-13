@@ -5,7 +5,7 @@
 
 	<!-- Based on https://github.com/ros/urdf_sim_tutorial/blob/master/launch/gazebo.launch from the guide http://wiki.ros.org/urdf/Tutorials/Using%20a%20URDF%20in%20Gazebo -->
 
-	<arg name="world_name" default="control_lab" />
+	<arg name="world_name" default="pedsim" />
 	<arg name="gui" default="true" /> <!-- whether to display Gazebo GUI (rendering) or not (run headless) -->
 
 	<!-- Default starting position of robot -->
@@ -25,7 +25,11 @@
 	<!-- urdf xml robot description loaded on the Parameter Server (for use in RViz) - this also converts the xacro into a proper urdf file -->
 	<param name="robot_description" command="$(find xacro)/xacro '$(find kugle_sim_description)/urdf/kugle_rviz.xacro'" />
 	<param name="robot_description_rviz" command="$(find xacro)/xacro '$(find kugle_sim_description)/urdf/kugle_rviz.xacro'" />
+	<param name="pedestrian_description" command="$(find xacro)/xacro '$(find pedestrian_sim_description)/urdf/pedestrian.xacro'" />
 	<param name="use_gui" value="$(arg gui)"/>
+
+	<!-- Spawn Pedestrian in Gazebo -->
+	<node name="pedestrian_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param pedestrian_description -model pedestrian -x $(arg x) -y $(arg y) -z 0.2" respawn="false" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
 
 	<!-- Spawn Kugle robot in Gazebo -->
 	<node name="kugle_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model kugle -x $(arg x) -y $(arg y) -z 0.2" respawn="false" output="screen" /> <!-- make sure model name matches the robot name in the xacro file -->	
