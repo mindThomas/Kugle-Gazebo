@@ -1,13 +1,12 @@
 /* Copyright (C) 2018-2019 Thomas Jespersen, TKJ Electronics. All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
- * the Free Software Foundation, version 3.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the MIT License
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
- * General Public License for more details. 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the MIT License for further details.
  *
  * Contact information
  * ------------------------------------------
@@ -17,8 +16,8 @@
  * ------------------------------------------
  */
 
-/* Inspired from https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/indigo-devel/hector_gazebo_plugins/src/gazebo_ros_force_based_move.cpp */
-/*
+/* Inspired from https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/indigo-devel/hector_gazebo_plugins/src/gazebo_ros_force_based_move.cpp
+ *
  * Copyright 2015 Stefan Kohlbrecher, TU Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
