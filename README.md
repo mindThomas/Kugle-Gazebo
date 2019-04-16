@@ -31,4 +31,11 @@ source devel/setup.bash
 ```
 
 # Launch simulation
-```roslaunch kugle_gazebo gazebo.launch```
+The Gazebo simulation can be launched with
+```bash
+roslaunch kugle_gazebo gazebo.launch
+```
+
+But it is recommended to launch the simulation within the Kugle-ROS driver. See more at https://github.com/mindThomas/Kugle-ROS#simulation
+
+
