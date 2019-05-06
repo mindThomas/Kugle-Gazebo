@@ -1,5 +1,7 @@
 # Kugle-Gazebo
-Gazebo Simulation model of the Kugle robot
+This repository contains the Gazebo Simulation model of the Kugle robot developed as part of the master thesis work described in [Kugle - Modelling and Control of a Ball-balancing Robot](https://github.com/mindThomas/Kugle-MATLAB/blob/master/Kugle%20-%20Modelling%20and%20Control%20of%20a%20Ball-balancing%20Robot.pdf).
+
+![Gazebo simulation](gazebo.png)
 
 Notice that this model is not a complete simulation model of the ballbot but is only used as an abstraction to simulate and test navigation and planning algorithms for the Kugle robot using its' holonomic properties.
 
@@ -38,4 +40,18 @@ roslaunch kugle_gazebo gazebo.launch
 
 But it is recommended to launch the simulation within the Kugle-ROS driver. See more at https://github.com/mindThomas/Kugle-ROS#simulation
 
+# Videos
+A few videos illustrating the Gazebo simulation environment is listed below.
+
+**Joystick control of Kugle V1 simulation model in Gazebo**  
+[![Joystick control of Kugle V1 simulation model in Gazebo](http://img.youtube.com/vi/fN6Yctv39fs/hqdefault.jpg)](https://www.youtube.com/watch?v=fN6Yctv39fs&list=PLLtE4m3fKcOC_TuErjgOpTiI3abHPWM0x&index=12)
+
+**Kugle V1 Gazebo simulation with AMCL localization**  
+[![Kugle V1 Gazebo simulation with AMCL localization](http://img.youtube.com/vi/1IBuvJe25rY/hqdefault.jpg)](https://www.youtube.com/watch?v=1IBuvJe25rY&list=PLLtE4m3fKcOC_TuErjgOpTiI3abHPWM0x&index=14)
+
+**First success with MPC combined with ROS move_base**  
+[![First success with MPC combined with ROS move_base](http://img.youtube.com/vi/7Posm5jHJbw/hqdefault.jpg)](https://www.youtube.com/watch?v=7Posm5jHJbw&list=PLLtE4m3fKcOC_TuErjgOpTiI3abHPWM0x&index=15)
+
+**Gazebo simulation of ACADO MPC integrated with ROS move_base**  
+[![Gazebo simulation of ACADO MPC integrated with ROS move_base](http://img.youtube.com/vi/bR7nAHf_e2s/hqdefault.jpg)](https://www.youtube.com/watch?v=bR7nAHf_e2s&list=PLLtE4m3fKcOC_TuErjgOpTiI3abHPWM0x&index=16)
 
