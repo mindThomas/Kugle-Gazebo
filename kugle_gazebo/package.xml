@@ -73,7 +73,10 @@
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <gazebo_ros gazebo_media_path="${prefix}"
-                gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros
+      plugin_path="${prefix}/lib"
+      gazebo_media_path="${prefix}"
+      gazebo_model_path="${prefix}/models"
+      />
   </export>
 </package>

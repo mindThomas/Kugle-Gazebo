@@ -206,9 +206,16 @@ target_link_libraries(gazebo_position_control ${Boost_LIBRARIES} ${GAZEBO_LIBRAR
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
-install(DIRECTORY launch worlds models
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        PATTERN "*~" EXCLUDE)
+install(
+    TARGETS gazebo_ballbot_acceleration_control gazebo_position_control
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(
+    DIRECTORY config launch models scripts worlds
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 #############
 ## Testing ##
