@@ -36,6 +36,7 @@
 
 #include <gazebo_ballbot_acceleration_control.h>
 #include <cmath>       /* isnan, sqrt */
+#include <kugle_msgs/StateEstimate.h>
 
 namespace gazebo 
 {
@@ -145,6 +146,18 @@ namespace gazebo
           heading_link_ = sdf->GetElement("headingLink")->Get<std::string>();
       }
 
+      base_link_ = "base_link";
+      if (!sdf->HasElement("baseLink"))
+      {
+          ROS_WARN("BallbotAccelerationControl (ns = %s) missing <baseLink>, "
+                   "defaults to \"%s\"",
+                   base_link_.c_str(), base_link_.c_str());
+      }
+      else
+      {
+          base_link_ = sdf->GetElement("baseLink")->Get<std::string>();
+      }
+
     odometry_rate_ = 200.0;
     if (!sdf->HasElement("odometryRate")) 
     {
@@ -156,6 +169,18 @@ namespace gazebo
     {
       odometry_rate_ = sdf->GetElement("odometryRate")->Get<double>();
     }
+
+      state_estimate_topic_ = "StateEstimate";
+      if (!sdf->HasElement("stateEstimateTopic"))
+      {
+          ROS_WARN("BallbotAccelerationControl (ns = %s) missing <stateEstimateTopic>, "
+                   "defaults to \"%s\"",
+                   robot_namespace_.c_str(), state_estimate_topic_.c_str());
+      }
+      else
+      {
+          state_estimate_topic_ = sdf->GetElement("stateEstimateTopic")->Get<std::string>();
+      }
 
   cmd_timeout_ = 1.0;
   if (!sdf->HasElement("cmdTimeout"))
@@ -170,7 +195,7 @@ namespace gazebo
   }
 
 
-  acceleration_coefficient_ = 13.71;
+  acceleration_coefficient_ = 14.5289;
   if (!sdf->HasElement("accelerationCoefficient"))
   {
       ROS_WARN("BallbotAccelerationControl (ns = %s) missing <accelerationCoefficient>, "
@@ -202,6 +227,7 @@ namespace gazebo
     prev_y_vel_ = 0;
     prev_yaw_ = 0;
     prev_yaw_for_odometry_ = 0;
+    mcu_time_ = 0;
     alive_ = true;
 
     attitudeReference_ = tf::Quaternion(0,0,0,1); // set as unit quaternion
@@ -243,6 +269,7 @@ namespace gazebo
 
     vel_sub_ = rosnode_->subscribe(so);
     odometry_pub_ = rosnode_->advertise<nav_msgs::Odometry>(odometry_topic_, 1);
+    state_estimate_pub_ = rosnode_->advertise<kugle_msgs::StateEstimate>(state_estimate_topic_, 1);
     joints_pub_ = rosnode_->advertise<sensor_msgs::JointState>("/joint_states", 1);
 
     // start custom queue for diff drive
@@ -309,19 +336,21 @@ namespace gazebo
                   else yaw += 2 * M_PI; // yaw has suddenly become negative, add 360 degree
               }
           }*/
+
           yaw = unwrap(prev_yaw_, yaw);
           parent_->GetJoint("yaw")->SetPosition(0, yaw);
           prev_yaw_ = yaw;
       }
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
+    ROS_WARN("Simulation has not been tested/verified with Gazebo 8 !!!")
     ignition::math::Pose3d pose = parent_->WorldPose();
 
     ignition::math::Vector3d angular_vel = parent_->WorldAngularVel();
 
     double error = angular_vel.Z() - rot_;
 
-ROS_INFO("Angular vel 1 error = %2.3f", error);
+    ROS_INFO("Angular vel 1 error = %2.3f", error);
 
     link_->AddTorque(ignition::math::Vector3d(0.0, 0.0, -error * torque_yaw_velocity_p_gain_));
 
@@ -425,7 +454,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
       double seconds_since_last_update = 
         (current_time - last_odom_publish_time_).Double();
       if (seconds_since_last_update > (1.0 / odometry_rate_)) {
-        publishOdometry(seconds_since_last_update);
+        publishOdometryAndStateEstimate(seconds_since_last_update);
         publishWorldGroundTruth();
         publishJointStates();
         last_odom_publish_time_ = current_time;
@@ -529,13 +558,15 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
         }
     }
 
-  void GazeboRosBallbotAccelerationControl::publishOdometry(double step_time)
+  void GazeboRosBallbotAccelerationControl::publishOdometryAndStateEstimate(double step_time)
   {
-    /* Odometry is based on integration of the relative velocity in forward direction and angular (yaw) velocity */
+    /* Odometry is based on integration of the linear (translational) velocity */
     ros::Time current_time = ros::Time::now();
     std::string odom_frame = tf::resolve(tf_prefix_, odometry_frame_);
     std::string contact_point_frame = tf::resolve(tf_prefix_, contact_point_link_);
     std::string heading_frame = tf::resolve(tf_prefix_, heading_link_);
+    std::string base_link_frame = tf::resolve(tf_prefix_, base_link_);
+    tf::Quaternion q = attitudeReference_;
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
     ignition::math::Vector3d angular_vel = parent_->RelativeAngularVel();
@@ -555,15 +586,20 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
 
     // Then we determine the yaw/heading and rotate the linear velocity to get it in the heading frame
     tfScalar yaw, pitch, roll;
-    tf::Matrix3x3 mat(attitudeReference_);
+    tf::Matrix3x3 mat(q);
     mat.getEulerYPR(yaw, pitch, roll);
-    tf::Quaternion q_heading = tf::createQuaternionFromYaw(-yaw);
+    tf::Vector3 linear_vel_base_link = mat.transpose() * tf::Vector3(linear_vel.x,linear_vel.y,0); // compute linear velocity in base_link frame
+    tf::Quaternion q_heading = tf::createQuaternionFromYaw(yaw);
     mat.setRotation(q_heading);
-    tf::Vector3 linear_vel_heading = mat * tf::Vector3(linear_vel.x,linear_vel.y,linear_vel.z);
+    tf::Vector3 linear_vel_heading = mat.transpose() * tf::Vector3(linear_vel.x,linear_vel.y,0);
 
     // Determine angular velocity around z-axis based on discrete differentiation of yaw
     double angular_velocity = (yaw - prev_yaw_for_odometry_) / step_time;
     prev_yaw_for_odometry_ = yaw;
+
+    // Compute dq
+    tf::Quaternion q_omega(0, 0, angular_velocity, 0); // x,y,z,w - only set z angular velocity to yaw turning rate
+    tf::Quaternion dq = q_omega * q * 0.5; // dq = 1/2 * Phi(q_omega) * q
 
     // Create delta transforms
     /*tf::Transform deltaRot;
@@ -578,31 +614,33 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
 
     if (transform_broadcaster_.get()){
           transform_broadcaster_->sendTransform(
-                  tf::StampedTransform(odom_transform_, current_time, odom_frame,
-                                       contact_point_frame));
+                  tf::StampedTransform(odom_transform_, current_time, odom_frame, contact_point_frame));
     }
 
     // Prepare odometry message
     //   This represents an estimate of a position and velocity in free space.
-    //   The pose in this message should be specified in the coordinate frame given by header.frame_id.
+    //   The pose in this message should be specified in the coordinate frame given by header.frame_id
     //   The twist in this message should be specified in the coordinate frame given by the child_frame_id
     //tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
-    odom_.pose.pose.position.x = odom_transform_.getOrigin().x();
+    odom_.pose.pose.position.x = odom_transform_.getOrigin().x();  // inertial frame position
     odom_.pose.pose.position.y = odom_transform_.getOrigin().y();
     odom_.pose.pose.position.z = odom_transform_.getOrigin().z();
-    odom_.pose.pose.orientation.w = q_heading.w();
-    odom_.pose.pose.orientation.x = q_heading.x();
-    odom_.pose.pose.orientation.y = q_heading.y();
-    odom_.pose.pose.orientation.z = q_heading.z();
+    odom_.pose.pose.orientation.w = q.w();
+    odom_.pose.pose.orientation.x = q.x();
+    odom_.pose.pose.orientation.y = q.y();
+    odom_.pose.pose.orientation.z = q.z();
 
+    odom_.twist.twist.angular.x = 0;
+    odom_.twist.twist.angular.y = 0;
     odom_.twist.twist.angular.z = angular_velocity;
-    odom_.twist.twist.linear.x  = linear_vel_heading.x();
-    odom_.twist.twist.linear.y  = linear_vel_heading.y();
+    odom_.twist.twist.linear.x  = linear_vel_base_link.x();  // base link frame velocity
+    odom_.twist.twist.linear.y  = linear_vel_base_link.y();
+    odom_.twist.twist.linear.z  = linear_vel_base_link.z();
 #endif
 
     odom_.header.stamp = current_time;
     odom_.header.frame_id = odom_frame;
-    odom_.child_frame_id = heading_frame;
+    odom_.child_frame_id = base_link_frame;
 
     odom_.pose.covariance[0] = 0.001;
     odom_.pose.covariance[7] = 0.001;
@@ -621,8 +659,29 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
     odom_.twist.covariance[35] = 0.01; // std::abs(angular_vel.z) < 0.0001
     //odom_.twist.covariance[35] = 100.0;
 
-
     odometry_pub_.publish(odom_);
+
+    //mcu_time_ += step_time;
+    mcu_time_ += 1.0f / odometry_rate_;
+    mcu_time_ = roundf(1000*mcu_time_) / 1000;
+
+    /* Send state estimate message */
+    kugle_msgs::StateEstimate stateEstimate_msg;
+    stateEstimate_msg.receive_time = ros::Time::now();
+    stateEstimate_msg.mcu_time = mcu_time_;
+    stateEstimate_msg.q.w = q.w();
+    stateEstimate_msg.q.x = q.x();
+    stateEstimate_msg.q.y = q.y();
+    stateEstimate_msg.q.z = q.z();
+    stateEstimate_msg.dq.w = dq.w();
+    stateEstimate_msg.dq.x = dq.x();
+    stateEstimate_msg.dq.y = dq.y();
+    stateEstimate_msg.dq.z = dq.z();
+    stateEstimate_msg.position[0] = float(odom_transform_.getOrigin().x());
+    stateEstimate_msg.position[1] = float(odom_transform_.getOrigin().y());
+    stateEstimate_msg.velocity[0] = float(linear_vel.x); // inertial frame velocity
+    stateEstimate_msg.velocity[1] = float(linear_vel.y);
+    state_estimate_pub_.publish(stateEstimate_msg);
   }
 
 

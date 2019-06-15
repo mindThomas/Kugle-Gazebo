@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs 
   sensor_msgs
+  kugle_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -119,7 +120,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 catkin_package(
   INCLUDE_DIRS plugins
   LIBRARIES gazebo_ballbot_acceleration_control gazebo_position_control
-  CATKIN_DEPENDS gazebo_ros roscpp std_msgs geometry_msgs nav_msgs sensor_msgs
+  CATKIN_DEPENDS gazebo_ros roscpp std_msgs geometry_msgs nav_msgs sensor_msgs kugle_msgs
   DEPENDS
 )
 

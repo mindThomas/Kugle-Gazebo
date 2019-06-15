@@ -70,7 +70,7 @@ namespace gazebo {
 
     private:
       void publishWorldGroundTruth(void);
-      void publishOdometry(double step_time);
+      void publishOdometryAndStateEstimate(double step_time);
       void publishJointStates(void);
       float unwrap(float previous_angle, float new_angle);
 
@@ -88,6 +88,7 @@ namespace gazebo {
 
       boost::shared_ptr<ros::NodeHandle> rosnode_;
       ros::Publisher odometry_pub_;
+      ros::Publisher state_estimate_pub_;
       ros::Publisher joints_pub_;
       ros::Subscriber vel_sub_;
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
@@ -105,10 +106,13 @@ namespace gazebo {
       std::string world_frame_;
       std::string contact_point_link_;
       std::string heading_link_;
+      std::string base_link_;
       double odometry_rate_;
+      std::string state_estimate_topic_;
       bool publish_odometry_tf_;
       double cmd_timeout_;
       double acceleration_coefficient_;
+      float mcu_time_;
 
       tf::Quaternion attitudeReference_;
 
