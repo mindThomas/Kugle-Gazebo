@@ -17,7 +17,8 @@
     </light>
 
     <!-- Increase 'max_step_size' if the simulation runs too slow -->
-    <!-- OBS! 'real_time_update_rate' has to be 1/max_step_size -->
+    <!-- OBS! 'real_time_update_rate' has to be 1/max_step_size to achieve real-time execution -->
+    <!-- Since the realtime factor is defined as: real_time_factor = max_step_size * real_time_update_rate -->
     <gravity>0 0 -9.82</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type='adiabatic'/>

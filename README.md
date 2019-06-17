@@ -40,6 +40,15 @@ roslaunch kugle_gazebo gazebo.launch
 
 But it is recommended to launch the simulation within the Kugle-ROS driver. See more at https://github.com/mindThomas/Kugle-ROS#simulation
 
+# Reset simulation
+The Gazebo simulation/world can be reset without having to restart Gazebo by calling:
+```bash
+rosservice call /gazebo/reset_world
+```
+
+# Adjusting the real-time factor
+The real-time factor can be adjusted to e.g. simulate slower than real-time if some code takes longer time to execute on the computer running the simulation. In this case the ROS time will be slowed down accordingly such that computation time can be made negligible.
+
 # Videos
 A few videos illustrating the Gazebo simulation environment is listed below.
 

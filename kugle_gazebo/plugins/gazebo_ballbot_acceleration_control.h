@@ -63,6 +63,8 @@ namespace gazebo {
       GazeboRosBallbotAccelerationControl();
       ~GazeboRosBallbotAccelerationControl();
       void Load(physics::ModelPtr parent, sdf::ElementPtr sdf);
+      void Init();
+      void Reset();
 
     protected: 
       virtual void UpdateChild();

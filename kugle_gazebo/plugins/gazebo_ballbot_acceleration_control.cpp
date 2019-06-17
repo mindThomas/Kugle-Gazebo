@@ -290,6 +290,35 @@ namespace gazebo
       return previous_angle + d;
   }
 
+  // Called when simulation initializes
+  void GazeboRosBallbotAccelerationControl::Init()
+  {
+
+  }
+
+  // Called when Gazebo world/simulation is reset
+  void GazeboRosBallbotAccelerationControl::Reset()
+  {
+      prev_x_vel_ = 0;
+      prev_y_vel_ = 0;
+      prev_yaw_ = 0;
+      prev_yaw_for_odometry_ = 0;
+      mcu_time_ = 0;
+      alive_ = true;
+
+      attitudeReference_ = tf::Quaternion(0,0,0,1); // set as unit quaternion
+
+      odom_transform_.setIdentity();
+
+#if (GAZEBO_MAJOR_VERSION >= 8)
+      prev_update_time_ = parent_->GetWorld()->SimTime();
+#else
+      prev_update_time_ = parent_->GetWorld()->GetSimTime();
+#endif
+
+      last_cmd_update_time_ = ros::Time::now();
+  }
+
   // Update the controller
   void GazeboRosBallbotAccelerationControl::UpdateChild()
   {
