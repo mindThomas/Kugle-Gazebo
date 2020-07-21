@@ -18,8 +18,8 @@ mkdir -p ~/kugle_ws/src
 cd ~/kugle_ws/src
 catkin_init_workspace
 git clone https://github.com/mindThomas/Kugle-Gazebo
-git clone https://github.com/mindThomas/Kugle-ROS
-git clone https://github.com/mindThomas/realsense_gazebo_plugin
+git clone -b melodic https://github.com/mindThomas/Kugle-ROS
+git clone -b melodic https://github.com/mindThomas/realsense_gazebo_plugin
 cd ..
 rosdep install --from-paths src --ignore-src -r -y
 ```

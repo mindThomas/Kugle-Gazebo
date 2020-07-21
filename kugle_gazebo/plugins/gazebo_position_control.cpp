@@ -221,25 +221,6 @@ namespace gazebo
       tf::Matrix3x3 mat(attitudeReference_);
       mat.getEulerYPR(yaw, pitch, roll);
 
-#if (GAZEBO_MAJOR_VERSION >= 8)
-    ignition::math::Pose3d pose = parent_->WorldPose();
-
-    ignition::math::Vector3d angular_vel = parent_->WorldAngularVel();
-
-    double error = angular_vel.Z() - rot_;
-
-ROS_INFO("Angular vel 1 error = %2.3f", error);
-
-    link_->AddTorque(ignition::math::Vector3d(0.0, 0.0, -error * torque_yaw_velocity_p_gain_));
-
-    float yaw = pose.Rot().Yaw();
-
-    ignition::math::Vector3d linear_vel = parent_->RelativeLinearVel();
-
-    link_->AddRelativeForce(ignition::math::Vector3d((x_ - linear_vel.X())* force_x_velocity_p_gain_,
-                                                     (y_ - linear_vel.Y())* force_y_velocity_p_gain_,
-                                                     0.0));
-#else
     /*math::Pose pose = parent_->GetWorldPose();
     math::Vector3 linear_vel = parent_->GetWorldLinearVel();
     math::Vector3 angular_vel = parent_->GetWorldAngularVel();
@@ -297,11 +278,27 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
 
       //math::Vector3 linear_vel2 = parent_->GetLink("base_link")->GetRelativeLinearVel();
       //parent_->GetLink("base_link")->SetLinearVel(math::Vector3(prev_x_vel_, prev_y_vel_, linear_vel2.z));
+#if (GAZEBO_MAJOR_VERSION >= 8)
+      ignition::math::Vector3d linear_vel_world = link_->WorldLinearVel();
+      ignition::math::Vector3d angular_vel_world = link_->WorldAngularVel();
 
+      // Set our desired model velocities (based on the acceleration references)
+      linear_vel_world.X() = prev_x_vel_;
+      linear_vel_world.Y() = prev_y_vel_;
+      angular_vel_world.Z() = 0; //prev_rot_vel_;   // do not rotate around z-axis
+
+      link_->SetWorldTwist(ignition::math::Vector3d(0,0,0), ignition::math::Vector3d(0,0,0), true);
+
+      double x, y;
+      x = 2*cos(0.1 * 2 * M_PI * current_ros_time.toSec());
+      y = 2*sin(0.1 * 2 * M_PI * current_ros_time.toSec());
+
+      link_->SetWorldPose(ignition::math::Pose3d(x,y,0,  0,0,0), true, true);
+#else
       math::Vector3 linear_vel_world = link_->GetWorldLinearVel();
       math::Vector3 angular_vel_world = link_->GetWorldAngularVel();
 
-      // Set our desired model velocities (based on the acceleration references)
+    // Set our desired model velocities (based on the acceleration references)
       linear_vel_world.x = prev_x_vel_;
       linear_vel_world.y = prev_y_vel_;
       angular_vel_world.z = 0; //prev_rot_vel_;   // do not rotate around z-axis
@@ -313,6 +310,7 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
       y = 2*sin(0.1 * 2 * M_PI * current_ros_time.toSec());
 
       link_->SetWorldPose(math::Pose(x,y,0,  0,0,0), true, true);
+#endif
 
       /*
       math::Vector3 linear_accel = (linear_vel - prev_linear_vel_) / dt;
@@ -324,7 +322,6 @@ ROS_INFO("Angular vel 1 error = %2.3f", error);
       ROS_INFO("accel (x,y,yaw) = %2.3f\t%2.3f\t%2.3f", linear_accel.x, linear_accel.y, angular_accel.z);*/
 
 
-#endif
     //parent_->PlaceOnNearestEntityBelow();
     //parent_->SetLinearVel(math::Vector3(
     //      x_ * cosf(yaw) - y_ * sinf(yaw),

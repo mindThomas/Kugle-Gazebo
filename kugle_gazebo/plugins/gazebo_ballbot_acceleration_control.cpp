@@ -371,26 +371,6 @@ namespace gazebo
           prev_yaw_ = yaw;
       }
 
-#if (GAZEBO_MAJOR_VERSION >= 8)
-    ROS_WARN("Simulation has not been tested/verified with Gazebo 8 !!!")
-    ignition::math::Pose3d pose = parent_->WorldPose();
-
-    ignition::math::Vector3d angular_vel = parent_->WorldAngularVel();
-
-    double error = angular_vel.Z() - rot_;
-
-    ROS_INFO("Angular vel 1 error = %2.3f", error);
-
-    link_->AddTorque(ignition::math::Vector3d(0.0, 0.0, -error * torque_yaw_velocity_p_gain_));
-
-    float yaw = pose.Rot().Yaw();
-
-    ignition::math::Vector3d linear_vel = parent_->RelativeLinearVel();
-
-    link_->AddRelativeForce(ignition::math::Vector3d((x_ - linear_vel.X())* force_x_velocity_p_gain_,
-                                                     (y_ - linear_vel.Y())* force_y_velocity_p_gain_,
-                                                     0.0));
-#else
     /*math::Pose pose = parent_->GetWorldPose();
     math::Vector3 linear_vel = parent_->GetWorldLinearVel();
     math::Vector3 angular_vel = parent_->GetWorldAngularVel();
@@ -449,6 +429,17 @@ namespace gazebo
       //math::Vector3 linear_vel2 = parent_->GetLink("base_link")->GetRelativeLinearVel();
       //parent_->GetLink("base_link")->SetLinearVel(math::Vector3(prev_x_vel_, prev_y_vel_, linear_vel2.z));
 
+#if (GAZEBO_MAJOR_VERSION >= 8)
+      ignition::math::Vector3d linear_vel_world = link_->WorldLinearVel();
+      ignition::math::Vector3d angular_vel_world = link_->WorldAngularVel();
+
+      // Set our desired model velocities (based on the acceleration references)
+      linear_vel_world.X() = prev_x_vel_;
+      linear_vel_world.Y() = prev_y_vel_;
+      angular_vel_world.Z() = 0; //prev_rot_vel_;   // do not rotate around z-axis
+
+      link_->SetWorldTwist(linear_vel_world, ignition::math::Vector3d(0,0,0), true);
+#else
       math::Vector3 linear_vel_world = link_->GetWorldLinearVel();
       math::Vector3 angular_vel_world = link_->GetWorldAngularVel();
 
@@ -458,6 +449,7 @@ namespace gazebo
       angular_vel_world.z = 0; //prev_rot_vel_;   // do not rotate around z-axis
 
       link_->SetWorldTwist(linear_vel_world, math::Vector3(0,0,0), true);
+#endif
 
       /*
       math::Vector3 linear_accel = (linear_vel - prev_linear_vel_) / dt;
@@ -468,8 +460,6 @@ namespace gazebo
 
       ROS_INFO("accel (x,y,yaw) = %2.3f\t%2.3f\t%2.3f", linear_accel.x, linear_accel.y, angular_accel.z);*/
 
-
-#endif
     //parent_->PlaceOnNearestEntityBelow();
     //parent_->SetLinearVel(math::Vector3(
     //      x_ * cosf(yaw) - y_ * sinf(yaw),
@@ -563,7 +553,15 @@ namespace gazebo
         std::string odom_frame = tf::resolve(tf_prefix_, odometry_frame_);
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
+        ignition::math::Pose3d pose = parent_->WorldPose();
+        ignition::math::Vector3d linear_vel = parent_->WorldLinearVel();
+        ignition::math::Vector3d angular_vel = parent_->WorldAngularVel();
+        float yaw = pose.Rot().Yaw();
 
+        tf::Transform base_link_tf; // base_link frame defined in world frame
+        base_link_tf.setIdentity();
+        base_link_tf.setOrigin(tf::Vector3(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z()));
+        base_link_tf.setRotation(tf::createQuaternionFromYaw(yaw));
 #else
         math::Pose pose = parent_->GetWorldPose();
         math::Vector3 linear_vel = parent_->GetWorldLinearVel();
@@ -574,12 +572,12 @@ namespace gazebo
         base_link_tf.setIdentity();
         base_link_tf.setOrigin(tf::Vector3(pose.pos.x, pose.pos.y, pose.pos.z));
         base_link_tf.setRotation(tf::createQuaternionFromYaw(yaw));
+#endif
 
         // odom_transform_  defines the base_link frame in odometry frame
         // Compute the transform of world frame defined in odometry frame
         tf::Transform worldCorrectionTransform = odom_transform_ * base_link_tf.inverse();
 
-#endif
         if (transform_broadcaster_.get()){
             transform_broadcaster_->sendTransform(
                     tf::StampedTransform(worldCorrectionTransform, current_time, odom_frame, world_frame)
@@ -598,15 +596,34 @@ namespace gazebo
     tf::Quaternion q = attitudeReference_;
 
 #if (GAZEBO_MAJOR_VERSION >= 8)
-    ignition::math::Vector3d angular_vel = parent_->RelativeAngularVel();
-    ignition::math::Vector3d linear_vel = parent_->RelativeLinearVel();
+/* We want to create ballbot odometry which is in the heading frame */
+      // First we get the world velocity
+      ignition::math::Vector3d linear_vel = parent_->WorldLinearVel();
 
-    odom_transform_= odom_transform_ * this->getTransformForMotion(linear_vel.X(), angular_vel.Z(), step_time);
+      // Then we determine the yaw/heading and rotate the linear velocity to get it in the heading frame
+      tfScalar yaw, pitch, roll;
+      tf::Matrix3x3 mat(q);
+      mat.getEulerYPR(yaw, pitch, roll);
+      tf::Vector3 linear_vel_base_link = mat.transpose() * tf::Vector3(linear_vel.X(),linear_vel.Y(),0); // compute linear velocity in base_link frame
+      tf::Quaternion q_heading = tf::createQuaternionFromYaw(yaw);
+      mat.setRotation(q_heading);
+      tf::Vector3 linear_vel_heading = mat.transpose() * tf::Vector3(linear_vel.X(),linear_vel.Y(),0);
 
-    tf::poseTFToMsg(odom_transform_, odom_.pose.pose);
-    odom_.twist.twist.angular.z = angular_vel.Z();
-    odom_.twist.twist.linear.x  = linear_vel.X();
-    error("not implemented!");
+      // Determine angular velocity around z-axis based on discrete differentiation of yaw
+      double angular_velocity = (yaw - prev_yaw_for_odometry_) / step_time;
+      prev_yaw_for_odometry_ = yaw;
+
+      // Compute dq
+      tf::Quaternion q_omega(0, 0, angular_velocity, 0); // x,y,z,w - only set z angular velocity to yaw turning rate
+      tf::Quaternion dq = q_omega * q * 0.5; // dq = 1/2 * Phi(q_omega) * q
+
+      // Create delta transforms
+      /*tf::Transform deltaRot;
+      deltaRot.setIdentity();
+      deltaRot.setRotation(tf::createQuaternionFromYaw(angular_velocity*step_time));*/
+      tf::Transform deltaPos;
+      deltaPos.setIdentity();
+      deltaPos.setOrigin(tf::Vector3(static_cast<double>(linear_vel.X()*step_time), static_cast<double>(linear_vel.Y()*step_time), 0.0));
 #else
 
     /* We want to create ballbot odometry which is in the heading frame */
@@ -637,6 +654,7 @@ namespace gazebo
     tf::Transform deltaPos;
     deltaPos.setIdentity();
     deltaPos.setOrigin(tf::Vector3(static_cast<double>(linear_vel.x*step_time), static_cast<double>(linear_vel.y*step_time), 0.0));
+#endif
 
     // Update odometry transform - odometry should not include rotation here, as this is given from the internal robot joints due to the way this Gazebo simulation model was made
     odom_transform_ = odom_transform_ * deltaPos;
@@ -665,7 +683,7 @@ namespace gazebo
     odom_.twist.twist.linear.x  = linear_vel_base_link.x();  // base link frame velocity
     odom_.twist.twist.linear.y  = linear_vel_base_link.y();
     odom_.twist.twist.linear.z  = linear_vel_base_link.z();
-#endif
+
 
     odom_.header.stamp = current_time;
     odom_.header.frame_id = odom_frame;
@@ -708,8 +726,13 @@ namespace gazebo
     stateEstimate_msg.dq.z = dq.z();
     stateEstimate_msg.position[0] = float(odom_transform_.getOrigin().x());
     stateEstimate_msg.position[1] = float(odom_transform_.getOrigin().y());
+#if (GAZEBO_MAJOR_VERSION >= 8)
+    stateEstimate_msg.velocity[0] = float(linear_vel.X()); // inertial frame velocity
+    stateEstimate_msg.velocity[1] = float(linear_vel.Y());
+#else
     stateEstimate_msg.velocity[0] = float(linear_vel.x); // inertial frame velocity
     stateEstimate_msg.velocity[1] = float(linear_vel.y);
+#endif
     state_estimate_pub_.publish(stateEstimate_msg);
   }
 
